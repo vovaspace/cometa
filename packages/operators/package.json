@@ -1,0 +1,49 @@
+{
+  "name": "@cometa/operators",
+  "version": "0.1.0",
+  "description": "Cometa operators library.",
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "typings": "./lib/typings/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "jest --colors",
+    "build": "npm run clean && tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json",
+    "clean": "rimraf ./lib",
+    "code:lint": "prettier --check . && eslint .",
+    "code:fix": "prettier --write . && eslint --fix ."
+  },
+  "license": "ISC",
+  "author": "Vladimir Lewandowski <me@vovaspace.com> (https://vovaspace.com/)",
+  "homepage": "https://cometa.js.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vovaspace/cometa.git",
+    "directory": "packages/operators"
+  },
+  "bugs": {
+    "url": "https://github.com/vovaspace/cometa/issues"
+  },
+  "keywords": [
+    "cometa",
+    "operators",
+    "lib",
+    "stdlib",
+    "util",
+    "state manager",
+    "state management",
+    "state",
+    "store",
+    "event",
+    "effect",
+    "declarative",
+    "functional",
+    "reactive",
+    "frp"
+  ],
+  "peerDependencies": {
+    "@cometa/core": "^0.1.0"
+  }
+}
