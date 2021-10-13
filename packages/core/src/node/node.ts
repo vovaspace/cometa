@@ -4,11 +4,12 @@ import { Watcher, createWatcher } from '../watcher';
 export interface Node<Update = unknown> extends Watcher<Update> {
   depend: (dependency: () => void) => void;
   child: (child: Node<unknown>) => void;
-  done: () => void;
+  enter: () => this;
+  exit: () => void;
 }
 
 export const createNode = <Update>(): Node<Update> => {
-  const { watch, emit, clear } = createWatcher<Update>();
+  const { watch, emit, inn, out, clear } = createWatcher<Update>();
 
   const dependencies = new Set<() => void>();
   const children = new Set<Node>();
@@ -17,6 +18,8 @@ export const createNode = <Update>(): Node<Update> => {
 
   const node = {
     emit,
+    inn,
+    out,
     watch: (watcher: (update: Update) => void) => {
       const unwatcher = watch(watcher);
 
@@ -36,11 +39,13 @@ export const createNode = <Update>(): Node<Update> => {
 
       clear();
     },
-    done: () => (context.current = previous),
+    enter: () => {
+      context.current = node;
+      previous?.child(node);
+      return node;
+    },
+    exit: () => (context.current = previous),
   };
-
-  context.current = node;
-  previous?.child(node);
 
   return node;
 };

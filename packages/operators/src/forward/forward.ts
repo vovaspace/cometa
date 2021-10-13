@@ -1,15 +1,14 @@
-import { Event } from '@cometa/core';
+import { Event, Unit } from '@cometa/core';
 
 export interface Forward {
-  <T>(from: Event<T>, to: Event<T>, map?: (from: T) => T): void;
-  <F, T>(from: Event<F>, to: Event<T>, map: (from: F) => T): void;
+  <F, T extends F>(from: Unit<F>, to: Event<T>, map?: (from: F) => T): void;
+  <F, T>(from: Unit<F>, to: Event<T>, map: (from: F) => T): void;
 }
 
-export const forward: Forward = <F, T>(
-  from: Event<F>,
-  to: Event<T>,
-  map?: (from: F) => T,
+export const forward: Forward = (
+  from: Unit<unknown>,
+  to: Event<unknown>,
+  map?: (from: unknown) => unknown,
 ): void => {
-  // @ts-expect-error
-  from.watch(map ? (update: F) => to(map(update)) : to);
+  from.watch(map ? (update) => to(map(update)) : to);
 };

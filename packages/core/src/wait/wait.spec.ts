@@ -67,6 +67,27 @@ describe('wait', () => {
     expect(storeWatcher).toHaveBeenNthCalledWith(5, 5);
   });
 
+  it('collects state', async () => {
+    expect.hasAssertions();
+
+    const $first = createStore(0);
+    const $second = createStore(0);
+    createStore(0);
+    const $fifth = createStore(0);
+
+    const run = createEvent();
+    run.watch(() => {
+      $first.set(1);
+      $fifth.set(5);
+      $second.set(2);
+    });
+
+    await expect(wait(() => run())).resolves.toStrictEqual({
+      state: { 0: 1, 1: 2, 3: 5 },
+      errors: [],
+    });
+  });
+
   it('catches errors', async () => {
     expect.hasAssertions();
 
@@ -93,11 +114,9 @@ describe('wait', () => {
       delayEffect(200);
     });
 
-    await expect(wait(() => run())).resolves.toStrictEqual([
-      error2,
-      error1,
-      error2,
-      error1,
-    ]);
+    await expect(wait(() => run())).resolves.toStrictEqual({
+      state: {},
+      errors: [error2, error1, error2, error1],
+    });
   });
 });

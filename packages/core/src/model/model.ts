@@ -17,7 +17,7 @@ export const defineModel = <M, Key extends ModelKey>(
     const cache = instances.get(key);
     if (cache !== undefined) return cache;
 
-    const { clear, done } = createNode();
+    const { clear, exit } = createNode().enter();
 
     const instance = creator(key) as Model<M>;
 
@@ -26,7 +26,7 @@ export const defineModel = <M, Key extends ModelKey>(
       instances.delete(key);
     };
 
-    done();
+    exit();
     instances.set(key, instance);
 
     return emitModelCreated(instance);

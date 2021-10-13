@@ -1,8 +1,8 @@
 import { watchModelCreated, watchStoreCreated } from '../lifecycle';
 import { UnknownModel } from '../model';
-import { AnyWritableStore } from '../store';
+import { AnyStore } from '../store';
 
-const stores = new Set<AnyWritableStore>();
+const stores = new Set<AnyStore>();
 const models = new Set<UnknownModel>();
 
 watchStoreCreated((store) => stores.add(store));

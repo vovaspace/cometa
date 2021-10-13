@@ -1,8 +1,5 @@
-import type { AnyReadableStore, AnyWritableStore } from '../../store';
+import type { AnyStore } from '../../store';
 import { createWatcher } from '../../watcher';
-import { emitUnitCreated } from './units';
 
 export const { watch: watchStoreCreated, emit: emitStoreCreated } =
-  createWatcher<AnyReadableStore & AnyWritableStore>();
-
-watchStoreCreated(emitUnitCreated);
+  createWatcher<AnyStore>();

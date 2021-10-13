@@ -1,54 +1,44 @@
-import {
-  AnyReadableStore,
-  ReadableStore,
-  StoreValue,
-  createStore,
-} from '@cometa/core';
+import { AnyFlow, Flow, FlowValue, createFlow } from '@cometa/core';
 import { toArray } from '../utilities';
 
-type StoreValues<S> = {
-  [I in keyof S]: StoreValue<S[I]>;
+type FlowValues<F> = {
+  [I in keyof F]: FlowValue<F[I]>;
 };
 
 export interface Compute {
-  <T, S extends AnyReadableStore>(
-    store: S,
-    map: (value: StoreValue<S>) => T,
-  ): ReadableStore<T>;
-  <T, S extends AnyReadableStore[]>(
-    stores: [...S],
-    map: (...values: StoreValues<S>) => T,
-  ): ReadableStore<T>;
+  <T, F extends AnyFlow>(source: F, map: (value: FlowValue<F>) => T): Flow<T>;
+  <T, F extends AnyFlow[]>(
+    sources: [...F],
+    map: (...values: FlowValues<F>) => T,
+  ): Flow<T>;
 }
 
-export const compute: Compute = <
-  T,
-  S extends AnyReadableStore | AnyReadableStore[],
->(
-  storeOrStores: S,
-  map: S extends AnyReadableStore
-    ? (value: StoreValue<S>) => T
-    : (
-        ...values: StoreValues<S> extends unknown[] ? StoreValues<S> : never
-      ) => T,
-): ReadableStore<T> => {
-  const stores = toArray(storeOrStores);
+export const compute: Compute = <T, F extends AnyFlow | AnyFlow[]>(
+  sourceOrSources: F,
+  map: F extends AnyFlow
+    ? (value: FlowValue<F>) => T
+    : (...values: FlowValues<F> extends unknown[] ? FlowValues<F> : never) => T,
+): Flow<T> => {
+  const sources = toArray(sourceOrSources);
 
-  const origins = new Set<AnyReadableStore>();
-  for (let i = 0; i < stores.length; i += 1) {
-    const store = stores[i]!;
-    if (store.origins) store.origins.forEach((origin) => origins.add(origin));
-    else origins.add(store);
+  const origins = new Set<AnyFlow>();
+  for (let i = 0; i < sources.length; i += 1) {
+    const flow = sources[i]!;
+    if (flow.meta.origins)
+      (flow.meta.origins as Set<AnyFlow>).forEach((origin) =>
+        origins.add(origin),
+      );
+    else origins.add(flow);
   }
 
-  const value = () =>
-    // @ts-expect-error
-    map(...stores.map((store) => store.value()));
+  // @ts-expect-error: A spread argument must either have a tuple type or be passed to a rest parameter.
+  const value = () => map(...sources.map((flow) => flow.value()));
 
-  const computed = createStore(value());
-  computed.origins = origins;
+  const computed = createFlow<T>(value, (set) =>
+    origins.forEach((origin) => origin.watch(() => set(value()))),
+  );
 
-  origins.forEach((store) => store.watch(() => computed.set(value())));
+  computed.meta.origins = origins;
 
   return computed;
 };

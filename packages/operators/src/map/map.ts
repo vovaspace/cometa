@@ -1,13 +1,13 @@
-import { AnyEvent, Event, EventPayload, createEvent } from '@cometa/core';
+import { AnyUnit, UnitType, Event, createEvent } from '@cometa/core';
 
-export const map = <E extends AnyEvent, Payload = void>(
-  event: E,
-  mapper: (payload: Payload) => EventPayload<E>,
+export const map = <U extends AnyUnit, Payload = void>(
+  unit: U,
+  mapper: (payload: Payload) => UnitType<U>,
 ): Event<Payload> => {
   const mapped = createEvent<Payload>();
 
-  event.watch((payload) => {
-    mapped(mapper(payload));
+  unit.watch((update) => {
+    mapped(mapper(update));
   });
 
   return mapped;
