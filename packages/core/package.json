@@ -1,7 +1,8 @@
 {
   "name": "@cometa/core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "The declarative state manager.",
+  "sideEffects": false,
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
   "typings": "./lib/typings/index.d.ts",

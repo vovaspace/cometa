@@ -41,7 +41,7 @@ export const createNode = <Update>(): Node<Update> => {
     },
     enter: () => {
       context.current = node;
-      previous?.child(node);
+      if (previous !== null) previous.child(node);
       return node;
     },
     exit: () => (context.current = previous),
