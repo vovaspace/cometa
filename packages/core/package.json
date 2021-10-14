@@ -13,7 +13,8 @@
     "./lifecycle": {
       "import": "./lib/esm/lifecycle/index.js",
       "require": "./lib/cjs/lifecycle/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "lib"
