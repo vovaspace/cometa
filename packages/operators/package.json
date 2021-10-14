@@ -1,6 +1,6 @@
 {
   "name": "@cometa/operators",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Cometa operators library.",
   "sideEffects": false,
   "main": "./lib/cjs/index.js",
