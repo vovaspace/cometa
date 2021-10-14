@@ -2,6 +2,7 @@
   "name": "@cometa/operators",
   "version": "0.2.0",
   "description": "Cometa operators library.",
+  "sideEffects": false,
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
   "typings": "./lib/typings/index.d.ts",
