@@ -1,7 +1,7 @@
 import { createStore } from './store';
 
 describe('store', () => {
-  it('keeps state', () => {
+  it('keeps a state', () => {
     const $store = createStore(0);
     expect($store.value()).toBe(0);
 

@@ -2,7 +2,9 @@ import { createNode } from '../node';
 import { Unit } from '../unit';
 
 export interface Event<Payload = void> extends Unit<Payload> {
+  (payload: Payload): void;
   event: true;
+  watch: (watcher: (payload: Payload) => void) => () => void;
 }
 
 export interface ExecutableEvent<Payload, Result> extends Event<Payload> {
@@ -16,7 +18,7 @@ export type AnyEvent = Event<any>;
 export const createExecutableEvent = <Payload, Result>(
   callback: (payload: Payload) => Result,
 ): ExecutableEvent<Payload, Result> => {
-  const { watch, emit, clear, done } = createNode<Payload>();
+  const { watch, emit } = createNode<Payload>();
 
   const event = (payload: Payload) => {
     const result = callback(payload);
@@ -24,12 +26,8 @@ export const createExecutableEvent = <Payload, Result>(
     return result;
   };
 
-  event.cometa = true as const;
   event.event = true as const;
   event.watch = watch;
-  event.clear = clear;
-
-  done();
 
   return event;
 };

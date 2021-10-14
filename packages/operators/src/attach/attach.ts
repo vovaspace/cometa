@@ -1,62 +1,76 @@
 import {
   AnyEffect,
-  AnyReadableStore,
+  AnyEvent,
+  AnyFlow,
+  createEffect,
+  createEvent,
   Effect,
   EffectError,
-  EffectPayload,
   EffectResult,
-  ReadableStore,
-  StoreValue,
-  createEffect,
+  Event,
+  EventPayload,
+  Flow,
+  FlowValue,
   is,
 } from '@cometa/core';
-import { Shape, ShapeValue, createShapeUnwrapper } from '../utilities';
+import {
+  AnyStateShape,
+  createStateShapeUnwrapper,
+  StateShape,
+  StateShapeValue,
+} from '../utilities';
 
-type StoreOrShapeValue<S> = S extends AnyReadableStore
-  ? StoreValue<S>
-  : S extends Shape
-  ? ShapeValue<S>
+type SourceValue<S> = S extends AnyFlow
+  ? FlowValue<S>
+  : S extends AnyStateShape
+  ? StateShapeValue<S>
   : never;
 
 export function attach<
-  Fx extends AnyEffect,
-  Source extends ReadableStore<EffectPayload<Fx>> | Shape<EffectPayload<Fx>>,
+  E extends AnyEvent,
+  Source extends Flow<EventPayload<E>> | StateShape<EventPayload<E>>,
   Payload = void,
 >(
-  effect: Fx,
+  target: E,
   source: Source,
-  map?: (
-    source: StoreOrShapeValue<Source>,
-    payload: Payload,
-  ) => EffectPayload<Fx>,
-): Effect<Payload, EffectResult<Fx>, EffectError<Fx>>;
+  map?: (source: SourceValue<Source>, payload: Payload) => EventPayload<E>,
+): E extends AnyEffect
+  ? Effect<Payload, EffectResult<E>, EffectError<E>>
+  : Event<Payload>;
 
 export function attach<
-  Fx extends AnyEffect,
-  Source extends AnyReadableStore | Shape,
+  E extends AnyEvent,
+  Source extends AnyFlow | AnyStateShape,
   Payload = void,
 >(
-  effect: Fx,
+  target: E,
   source: Source,
-  map: (
-    source: StoreOrShapeValue<Source>,
-    payload: Payload,
-  ) => EffectPayload<Fx>,
-): Effect<Payload, EffectResult<Fx>, EffectError<Fx>>;
+  map: (source: SourceValue<Source>, payload: Payload) => EventPayload<E>,
+): E extends AnyEffect
+  ? Effect<Payload, EffectResult<E>, EffectError<E>>
+  : Event<Payload>;
 
 export function attach<
-  Fx extends AnyEffect,
-  Source extends AnyReadableStore | Shape,
+  E extends AnyEvent,
+  Source extends AnyFlow | AnyStateShape,
   Payload = void,
 >(
-  effect: Fx,
+  target: E,
   source: Source,
-  map?: (source: unknown, payload: unknown) => EffectPayload<Fx>,
-) {
-  const value = is.store(source) ? source.value : createShapeUnwrapper(source);
-  const run = map
-    ? (payload: unknown) => effect(map(value(), payload))
-    : () => effect(value());
+  map?: (source: unknown, payload: unknown) => EventPayload<E>,
+): Effect<Payload, EffectResult<E>, EffectError<E>> | Event<Payload> {
+  const value = is.flow(source)
+    ? source.value
+    : createStateShapeUnwrapper(source);
 
-  return createEffect<Payload, EffectResult<Fx>, EffectError<Fx>>(run);
+  const run: (payload: unknown) => any = map
+    ? (payload: unknown) => target(map(value(), payload))
+    : () => target(value());
+
+  if (is.effect(target))
+    return createEffect<Payload, EffectResult<E>, EffectError<E>>(run);
+
+  const derived = createEvent<Payload>();
+  derived.watch(run);
+  return derived;
 }

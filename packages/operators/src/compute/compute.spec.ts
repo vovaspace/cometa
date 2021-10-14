@@ -1,8 +1,8 @@
-import { createStore } from '@cometa/core';
+import { createFlow, createStore } from '@cometa/core';
 import { compute } from './compute';
 
 describe('compute', () => {
-  it('derives a single store', () => {
+  it('derives a single', () => {
     const $store = createStore(0);
     const $computed = compute($store, Boolean);
 
@@ -12,9 +12,11 @@ describe('compute', () => {
     expect($computed.value()).toBe(true);
   });
 
-  it('combines multiple stores', () => {
+  it('combines multiple', () => {
     const $first = createStore('f');
-    const $second = createStore(0);
+
+    const reader = jest.fn().mockReturnValue(0);
+    const $second = createFlow(reader);
 
     const $computed = compute(
       [$first, $second],
@@ -26,7 +28,7 @@ describe('compute', () => {
     $first.set('s');
     expect($computed.value()).toBe('s0');
 
-    $second.set(1);
+    reader.mockReturnValueOnce(1);
     expect($computed.value()).toBe('s1');
   });
 

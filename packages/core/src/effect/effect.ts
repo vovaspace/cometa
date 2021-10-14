@@ -42,7 +42,7 @@ export type EffectError<Fx> = Fx extends Effect<any, any, infer E> ? E : never;
 export const createEffect = <Payload = void, Result = unknown, Err = Error>(
   handler: (payload: Payload) => Result | Promise<Result>,
 ): Effect<Payload, Result, Err> => {
-  const { done } = createNode();
+  const { exit } = createNode().enter();
 
   const run = async (payload: Payload): Promise<Result> => {
     try {
@@ -82,7 +82,7 @@ export const createEffect = <Payload = void, Result = unknown, Err = Error>(
     else effect.rejected({ payload: payload.payload, error: payload.error });
   });
 
-  done();
+  exit();
 
   return effect;
 };

@@ -12,20 +12,21 @@ describe('node', () => {
 
   it('sets context', () => {
     const node = createNode();
+    node.enter();
     expect(context.current).toBe(node);
   });
 
   it('sets previous context', () => {
-    const first = createNode();
+    const first = createNode().enter();
     expect(context.current).toBe(first);
 
-    const second = createNode();
+    const second = createNode().enter();
     expect(context.current).toBe(second);
 
-    second.done();
+    second.exit();
     expect(context.current).toBe(first);
 
-    first.done();
+    first.exit();
     expect(context.current).toBeNull();
   });
 
@@ -40,11 +41,11 @@ describe('node', () => {
   });
 
   it('clears children', () => {
-    const first = createNode();
-    const second = createNode();
+    const first = createNode().enter();
+    const second = createNode().enter();
 
-    second.done();
-    first.done();
+    second.exit();
+    first.exit();
 
     const watcher = jest.fn();
     second.watch(watcher);
@@ -55,14 +56,14 @@ describe('node', () => {
   });
 
   it('depends a current node', () => {
-    const first = createNode();
-    const second = createNode();
+    const first = createNode().enter();
+    const second = createNode().enter();
 
     const watcher = jest.fn();
     first.watch(watcher);
 
-    second.done();
-    first.done();
+    second.exit();
+    first.exit();
 
     second.clear();
     first.emit(null);

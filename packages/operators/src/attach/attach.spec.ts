@@ -1,20 +1,26 @@
-import { createEffect, createStore, wait } from '@cometa/core';
+import {
+  createEffect,
+  createEvent,
+  createFlow,
+  createStore,
+  wait,
+} from '@cometa/core';
 import { attach } from './attach';
 
-const setup = () => {
+const setup = <T>() => {
   const watcher = jest.fn();
-  const effect = createEffect<number>(() => {});
-  effect.watch(watcher);
-  return [effect, watcher] as const;
+  const event = createEvent<T>();
+  event.watch(watcher);
+  return [event, watcher] as const;
 };
 
 describe('attach', () => {
   describe('store source', () => {
     it('attaches full-payload source', () => {
-      const [effect, watcher] = setup();
-      const $number = createStore(0);
+      const [event, watcher] = setup<number>();
+      const $number = createFlow(() => 0);
 
-      const derived = attach(effect, $number);
+      const derived = attach(event, $number);
 
       derived();
 
@@ -23,10 +29,10 @@ describe('attach', () => {
     });
 
     it('attaches full-payload source with map', () => {
-      const [effect, watcher] = setup();
+      const [event, watcher] = setup<number>();
       const $number = createStore(0);
 
-      const derived = attach(effect, $number, (source) => source + 1);
+      const derived = attach(event, $number, (source) => source + 1);
 
       derived();
 
@@ -35,11 +41,11 @@ describe('attach', () => {
     });
 
     it('attaches full-payload source with map and payload', () => {
-      const [effect, watcher] = setup();
+      const [event, watcher] = setup<number>();
       const $number = createStore(0);
 
       const derived = attach(
-        effect,
+        event,
         $number,
         (source, payload: number) => source + payload,
       );
@@ -50,11 +56,11 @@ describe('attach', () => {
       expect(watcher).toHaveBeenCalledWith(2);
     });
 
-    it('attaches source with map', () => {
-      const [effect, watcher] = setup();
-      const $string = createStore('1');
+    it('attaches raw source with map', () => {
+      const [event, watcher] = setup<number>();
+      const $string = createFlow(() => '1');
 
-      const derived = attach(effect, $string, (source) =>
+      const derived = attach(event, $string, (source) =>
         Number.parseInt(source, 10),
       );
 
@@ -64,12 +70,12 @@ describe('attach', () => {
       expect(watcher).toHaveBeenCalledWith(1);
     });
 
-    it('attaches source with map and payload', () => {
-      const [effect, watcher] = setup();
+    it('attaches raw source with map and payload', () => {
+      const [event, watcher] = setup<number>();
       const $string = createStore('1');
 
       const derived = attach(
-        effect,
+        event,
         $string,
         (source, payload: number) => Number.parseInt(source, 10) + payload,
       );
@@ -81,7 +87,38 @@ describe('attach', () => {
     });
   });
 
-  it("triggers effect's events", async () => {
+  describe('state shape source', () => {
+    it('attaches full-payload object source', () => {
+      const [event, watcher] =
+        setup<{ num: number; str: string; bool: boolean }>();
+
+      const derived = attach(event, {
+        num: createStore(0),
+        str: createFlow(() => 'str'),
+        bool: true,
+      });
+      derived();
+
+      expect(watcher).toHaveBeenCalledTimes(1);
+      expect(watcher).toHaveBeenCalledWith({ num: 0, str: 'str', bool: true });
+    });
+
+    it('attaches full-payload array source', () => {
+      const [event, watcher] = setup<[number, string, boolean]>();
+
+      const derived = attach(event, [
+        createStore(0),
+        createFlow(() => 'str'),
+        true,
+      ]);
+      derived();
+
+      expect(watcher).toHaveBeenCalledTimes(1);
+      expect(watcher).toHaveBeenCalledWith([0, 'str', true]);
+    });
+  });
+
+  it('attaches effect', async () => {
     expect.assertions(4);
 
     const doneWatcher = jest.fn();

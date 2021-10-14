@@ -1,11 +1,11 @@
-import { AnyEvent, Event, EventPayload, createEvent } from '@cometa/core';
+import { AnyUnit, Event, UnitType, createEvent } from '@cometa/core';
 
-export const combine = <U extends AnyEvent[]>(
+export const combine = <U extends AnyUnit[]>(
   ...units: U
-): Event<EventPayload<U[number]>> => {
-  const event = createEvent<EventPayload<U[number]>>();
+): Event<UnitType<U[number]>> => {
+  const combined = createEvent<UnitType<U[number]>>();
 
-  units.forEach((unit) => unit.watch(event));
+  units.forEach((unit) => unit.watch(combined));
 
-  return event;
+  return combined;
 };

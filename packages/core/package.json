@@ -1,6 +1,6 @@
 {
   "name": "@cometa/core",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "The declarative state manager.",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
@@ -13,7 +13,8 @@
     "./lifecycle": {
       "import": "./lib/esm/lifecycle/index.js",
       "require": "./lib/cjs/lifecycle/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "lib"
