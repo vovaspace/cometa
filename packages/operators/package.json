@@ -1,6 +1,6 @@
 {
   "name": "operators",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Cometa operators library.",
   "scripts": {
     "test": "jest --colors",
