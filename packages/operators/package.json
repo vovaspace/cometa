@@ -1,17 +1,12 @@
 {
-  "name": "@cometa/operators",
+  "name": "operators",
   "version": "0.2.1",
   "description": "Cometa operators library.",
-  "sideEffects": false,
-  "main": "./lib/cjs/index.js",
-  "module": "./lib/esm/index.js",
-  "typings": "./lib/typings/index.d.ts",
-  "files": [
-    "lib"
-  ],
   "scripts": {
     "test": "jest --colors",
-    "build": "npm run clean && tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json",
+    "lib": "npm run clean && npm run comile && npm run meta",
+    "comile": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json",
+    "meta": "node ../../tools/generate-manifest.js && cpy README.md LICENSE lib",
     "clean": "rimraf ./lib",
     "code:lint": "prettier --check . && eslint .",
     "code:fix": "prettier --write . && eslint --fix ."

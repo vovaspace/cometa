@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "test": "npm run test --workspaces",
-    "build": "npm run build --workspaces",
+    "lib": "npm run lib --workspaces",
     "code:lint": "prettier --check . && eslint .",
     "code:fix": "prettier --write . && eslint --fix ."
   },
@@ -20,9 +20,14 @@
   "bugs": {
     "url": "https://github.com/vovaspace/cometa/issues"
   },
+  "dependencies": {
+    "@cometa/core": "file:packages/core/lib",
+    "@cometa/operators": "file:packages/core/operators"
+  },
   "devDependencies": {
     "@types/jest": "^27.0.2",
     "@typescript-eslint/eslint-plugin": "^4.32.0",
+    "cpy-cli": "^3.1.1",
     "eslint": "^7.32.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-config-airbnb-typescript": "^14.0.0",
