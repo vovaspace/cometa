@@ -1,28 +1,15 @@
 {
-  "name": "@cometa/core",
-  "version": "0.2.1",
+  "name": "core",
+  "version": "0.2.2",
   "description": "The declarative state manager.",
-  "sideEffects": false,
-  "main": "./lib/cjs/index.js",
-  "module": "./lib/esm/index.js",
-  "typings": "./lib/typings/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./lib/esm/index.js",
-      "require": "./lib/cjs/index.js"
-    },
-    "./lifecycle": {
-      "import": "./lib/esm/lifecycle/index.js",
-      "require": "./lib/cjs/lifecycle/index.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "lib"
+  "entrypoints": [
+    "lifecycle"
   ],
   "scripts": {
     "test": "jest --colors",
-    "build": "npm run clean && tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json",
+    "lib": "npm run clean && npm run comile && npm run meta",
+    "comile": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json",
+    "meta": "node ../../tools/generate-manifest.js && cpy README.md LICENSE lib",
     "clean": "rimraf ./lib",
     "code:lint": "prettier --check . && eslint .",
     "code:fix": "prettier --write . && eslint --fix ."

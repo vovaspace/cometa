@@ -2,11 +2,10 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "module": "esnext",
-    "outDir": "lib/esm",
-    "declarationDir": "lib/typings",
-    "declaration": true,
-    "removeComments": false
+    "outDir": "lib/source/esm",
+    "declarationDir": "lib/source/typings",
+    "declaration": true
   },
-  "include": ["./src"],
+  "include": ["./source"],
   "exclude": ["**/*.spec.*"]
 }
