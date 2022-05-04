@@ -1,6 +1,7 @@
 import { createEffect } from '../effect';
 import { createEvent } from '../event';
 import { createStore } from '../store';
+import { bind } from '../queue';
 import { wait } from './wait';
 
 const delay = <T>(
@@ -58,6 +59,7 @@ describe('wait', () => {
     await wait(() => run());
 
     expect($store.value()).toBe(5);
+    expect($proxyStore.value()).toBe(5);
 
     expect(storeWatcher).toHaveBeenCalledTimes(5);
     expect(storeWatcher).toHaveBeenNthCalledWith(1, 1);
@@ -67,34 +69,13 @@ describe('wait', () => {
     expect(storeWatcher).toHaveBeenNthCalledWith(5, 5);
   });
 
-  it('collects state', async () => {
-    expect.hasAssertions();
-
-    const $first = createStore(0);
-    const $second = createStore(0);
-    createStore(0);
-    const $fifth = createStore(0);
-
-    const run = createEvent();
-    run.watch(() => {
-      $first.set(1);
-      $fifth.set(5);
-      $second.set(2);
-    });
-
-    await expect(wait(() => run())).resolves.toStrictEqual({
-      state: { 0: 1, 1: 2, 3: 5 },
-      errors: [],
-    });
-  });
-
   it('catches errors', async () => {
     expect.hasAssertions();
 
-    const error1 = new Error();
+    const error1 = new Error('ERROR_1');
     const handlingEffect = createEffect(() => delay(() => error1, 50, false));
 
-    const error2 = new Error();
+    const error2 = new Error('ERROR_2');
     const failingEffect = createEffect<void, void>(
       jest.fn().mockRejectedValue(error2),
     );
@@ -102,20 +83,20 @@ describe('wait', () => {
       handlingEffect();
     });
 
-    const delayEffect = createEffect<number>((payload) =>
-      delay(() => {
-        failingEffect();
-      }, payload),
-    );
+    const delayedEffect = createEffect<number>((payload) => {
+      const bound = bind(failingEffect);
+      return delay(() => {
+        bound();
+      }, payload);
+    });
 
     const run = createEvent<void>();
     run.watch(() => {
-      delayEffect(100);
-      delayEffect(200);
+      delayedEffect(100);
+      delayedEffect(200);
     });
 
     await expect(wait(() => run())).resolves.toStrictEqual({
-      state: {},
       errors: [error2, error1, error2, error1],
     });
   });

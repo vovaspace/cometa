@@ -4,7 +4,6 @@ export * from './event';
 export * from './flow';
 export * from './is';
 export * from './model';
-export * from './rollback';
 export * from './store';
 export * from './unit';
 export * from './wait';

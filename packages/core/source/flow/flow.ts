@@ -1,10 +1,14 @@
-import { emitFlowCreated } from '../lifecycle';
-import { createNode } from '../node';
+import { createHost } from '../host';
 import { Unit } from '../unit';
+import { createNode } from '../node';
+
+export interface FlowMeta {
+  [key: string]: unknown;
+}
 
 export interface Flow<T> extends Unit<T> {
   flow: true;
-  meta: Record<string | number | symbol, unknown>;
+  meta: FlowMeta;
   value: () => T;
   watch: (watcher: (value: T) => void) => () => void;
   subscribe: (subscriber: (value: T) => void) => () => void;
@@ -13,15 +17,17 @@ export interface Flow<T> extends Unit<T> {
 export type FlowValue<F> = F extends Flow<infer T> ? T : never;
 export type AnyFlow = Flow<any>;
 
+const noop = () => {};
+
 export const createFlow = <T>(
   reader: () => T,
   notifier?: (set: (next: T) => void) => void,
-  hot: boolean = false,
 ): Flow<T> => {
   let state = reader();
-  let active = hot;
+  let active = false;
 
-  const { watch, emit, clear, inn, out, enter, exit } = createNode<T>();
+  const { enter, exit, clear } = createHost();
+  const { emit, inn, out, watch } = createNode<T>();
 
   const set = (next: T) => next !== state && emit((state = next));
 
@@ -38,18 +44,15 @@ export const createFlow = <T>(
         active = true;
         exit();
       }
-    : () => {};
+    : noop;
 
-  if (hot) init();
-  else {
-    inn(init);
-    out(() => {
-      active = false;
-      clear();
-    });
-  }
+  inn(init);
+  out(() => {
+    active = false;
+    clear();
+  });
 
-  return emitFlowCreated({
+  const flow = {
     flow: true as const,
     meta: {},
     value,
@@ -58,7 +61,9 @@ export const createFlow = <T>(
       subscriber(value());
       return watch(subscriber);
     },
-  });
+  } as Flow<T>;
+
+  return flow;
 };
 
 export const flow = createFlow;

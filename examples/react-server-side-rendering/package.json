@@ -1,0 +1,47 @@
+{
+  "name": "cometa-example-react-server-side-rendering",
+  "version": "0.0.0",
+  "description": "Cometa with React Server Side Rendering Example",
+  "scripts": {
+    "start": "npm run start:client & npm run start:server",
+    "start:client": "webpack --config webpack.config.client.js --env development --watch",
+    "start:server": "nodemon build/server/index.js & webpack --config webpack.config.server.js --env development --watch",
+    "link": "npm link ../../node_modules/react",
+    "code:lint": "prettier --check . && eslint .",
+    "code:fix": "prettier --write . && eslint --fix ."
+  },
+  "license": "ISC",
+  "author": "Vladimir Lewandowski <me@vovaspace.com> (https://vovaspace.com/)",
+  "homepage": "https://cometa.js.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vovaspace/cometa.git",
+    "directory": "examples/react-server-side-rendering"
+  },
+  "bugs": {
+    "url": "https://github.com/vovaspace/cometa/issues"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.16.7",
+    "@cometa/core": "file:../../packages/core/lib",
+    "@cometa/operators": "file:../../packages/operators/lib",
+    "@cometa/react": "file:../../packages/react/lib",
+    "core-js": "^3.20.2",
+    "express": "^4.17.1",
+    "react": "18.0.0-rc.0-next-9d4e8e84f-20220207",
+    "react-dom": "18.0.0-rc.0-next-9d4e8e84f-20220207"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.8",
+    "@babel/plugin-transform-runtime": "^7.16.7",
+    "@babel/preset-env": "^7.15.8",
+    "@babel/preset-react": "^7.14.5",
+    "babel-loader": "^8.2.2",
+    "clean-webpack-plugin": "^4.0.0",
+    "nodemon": "^2.0.13",
+    "webpack": "^5.58.2",
+    "webpack-cli": "^4.9.0",
+    "webpack-node-externals": "^3.0.0",
+    "webpack-stats-plugin": "^1.0.3"
+  }
+}

@@ -22,10 +22,13 @@
   },
   "dependencies": {
     "@cometa/core": "file:packages/core/lib",
-    "@cometa/operators": "file:packages/core/operators"
+    "@cometa/operators": "file:packages/operators/lib",
+    "@cometa/react": "file:packages/react/lib"
   },
   "devDependencies": {
+    "@testing-library/react-hooks": "^7.0.2",
     "@types/jest": "^27.0.2",
+    "@types/react": "^17.0.30",
     "@typescript-eslint/eslint-plugin": "^4.32.0",
     "cpy-cli": "^3.1.1",
     "eslint": "^7.32.0",
@@ -36,6 +39,7 @@
     "eslint-plugin-jest": "^24.5.0",
     "jest": "^27.2.3",
     "prettier": "^2.4.1",
+    "react-test-renderer": "^18.0.0-rc.0",
     "ts-jest": "^27.0.5",
     "typescript": "^4.4.3"
   }

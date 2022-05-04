@@ -1,11 +1,10 @@
+import { context } from '../context';
 import {
   Event,
-  ExecutableEvent,
+  ExoticExecutableEvent,
   createEvent,
-  createExecutableEvent,
+  createExoticExecutableEvent,
 } from '../event';
-import { emitQueueMessage } from '../lifecycle';
-import { createNode } from '../node';
 
 export interface EffectFulfilledPayload<Payload, Result> {
   payload: Payload;
@@ -22,7 +21,7 @@ export type EffectSettledPayload<Payload, Result, Err> =
   | (EffectRejectedPayload<Payload, Err> & { status: 'rejected' });
 
 export interface Effect<Payload = void, Result = unknown, Err = Error>
-  extends ExecutableEvent<Payload, Promise<Result>> {
+  extends ExoticExecutableEvent<Payload, Promise<Result>> {
   effect: true;
   settled: Event<EffectSettledPayload<Payload, Result, Err>>;
   fulfilled: Event<EffectFulfilledPayload<Payload, Result>>;
@@ -42,21 +41,23 @@ export type EffectError<Fx> = Fx extends Effect<any, any, infer E> ? E : never;
 export const createEffect = <Payload = void, Result = unknown, Err = Error>(
   handler: (payload: Payload) => Result | Promise<Result>,
 ): Effect<Payload, Result, Err> => {
-  const { exit } = createNode().enter();
-
   const run = async (payload: Payload): Promise<Result> => {
+    const { queue } = context;
     try {
       const result = await handler(payload);
+      context.queue = queue;
       effect.settled({ status: 'fulfilled', payload, result });
       return result;
     } catch (error) {
+      context.queue = queue;
       effect.settled({ status: 'rejected', payload, error: error as Err });
       throw error;
     }
   };
 
-  const effect = createExecutableEvent<Payload, Promise<Result>>((payload) =>
-    emitQueueMessage(run(payload)),
+  const effect = createExoticExecutableEvent<Payload, Promise<Result>>(
+    (payload) =>
+      context.queue === null ? run(payload) : context.queue.emit(run(payload)),
   ) as Effect<Payload, Result, Err>;
 
   effect.effect = true as const;
@@ -64,16 +65,16 @@ export const createEffect = <Payload = void, Result = unknown, Err = Error>(
   effect.done = createEvent<Result>();
   effect.failed = createEvent<Err>();
 
-  effect.fulfilled = createExecutableEvent<
+  effect.fulfilled = createExoticExecutableEvent<
     EffectFulfilledPayload<Payload, Result>,
     void
   >((payload) => effect.done(payload.result));
-  effect.rejected = createExecutableEvent<
+  effect.rejected = createExoticExecutableEvent<
     EffectRejectedPayload<Payload, Err>,
     void
   >((payload) => effect.failed(payload.error));
 
-  effect.settled = createExecutableEvent<
+  effect.settled = createExoticExecutableEvent<
     EffectSettledPayload<Payload, Result, Err>,
     void
   >((payload) => {
@@ -81,8 +82,6 @@ export const createEffect = <Payload = void, Result = unknown, Err = Error>(
       effect.fulfilled({ payload: payload.payload, result: payload.result });
     else effect.rejected({ payload: payload.payload, error: payload.error });
   });
-
-  exit();
 
   return effect;
 };

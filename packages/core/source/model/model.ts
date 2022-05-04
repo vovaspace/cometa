@@ -1,36 +1,67 @@
-import { emitModelCreated } from '../lifecycle';
-import { Node, createNode } from '../node';
+import { createExoticExecutableEvent, Event, AnyEvent } from '../event';
+import { context } from '../context';
+import { createHost } from '../host';
+import { Scope, ScopeKey } from '../scope';
+import { AnyStore } from '../store';
+import { lifecycle } from '../lifecycle';
 
-export type ModelKey = string | number | symbol;
+export const ModelControllerSymbol = Symbol('Model/Controller');
 
-export type Model<M> = M & Pick<Node, 'clear'>;
-export type UnknownModel = Model<unknown>;
+export type ExoticModelScopedEvent = Event<ScopeKey>;
 
-export type ModelFactory<M, Key extends ModelKey> = (key: Key) => Model<M>;
+export interface ModelController {
+  clear: () => void;
+  scope: Scope | null;
+  scoped: ExoticModelScopedEvent;
+}
 
-export const defineModel = <M, Key extends ModelKey>(
-  creator: (key: Key) => M,
-): ModelFactory<M, Key> => {
-  const instances = new Map<Key, Model<M>>();
+export interface ModelInternals {
+  [ModelControllerSymbol]: ModelController;
+}
 
-  return (key: Key): Model<M> => {
-    const cache = instances.get(key);
-    if (cache !== undefined) return cache;
+export type Model<M> = M & ModelInternals;
+export type AnyModel = Model<any>;
 
-    const { clear, exit } = createNode().enter();
+export type ModelFactory<M, A extends unknown[]> = (...args: A) => Model<M>;
 
-    const instance = creator(key) as Model<M>;
+export const createModel = <M>(
+  creator: (controller: ModelController) => M,
+): Model<M> => {
+  const host = createHost().enter();
 
-    instance.clear = () => {
-      clear();
-      instances.delete(key);
-    };
+  let units: (AnyStore | AnyEvent)[] | null = [];
+  const unwatchers = [
+    lifecycle.store.created.watch((store) => units!.push(store)),
+    lifecycle.event.created.watch((event) => units!.push(event)),
+  ];
 
-    exit();
-    instances.set(key, instance);
+  let ready = false;
+  let scoping: ScopeKey | null = null;
 
-    return emitModelCreated(instance);
+  const scoped = (key: ScopeKey) =>
+    units !== null &&
+    controller.scope &&
+    (controller.scope.register(key, units), (units = null));
+
+  const controller: ModelController = {
+    clear: host.clear,
+    scope: context.scope,
+    scoped: createExoticExecutableEvent<ScopeKey, void>((payload) =>
+      ready ? scoped(payload) : (scoping = payload),
+    ),
   };
+
+  const instance = creator(controller) as Model<M>;
+  instance[ModelControllerSymbol] = controller;
+
+  ready = true;
+
+  if (scoping !== null) scoped(scoping!);
+
+  unwatchers.forEach((unwatch) => unwatch());
+  host.exit();
+
+  return instance;
 };
 
-export const model = defineModel;
+export const model = createModel;

@@ -6,20 +6,24 @@ export interface Watcher<Update = unknown> {
   clear: () => void;
 }
 
+const noop = () => {};
+
 export const createWatcher = <Update>(): Watcher<Update> => {
   const watchers = new Set<(update: Update) => void>();
-  let inn = () => {};
-  let out = () => {};
+  let inn = noop;
+  let out = noop;
 
   return {
     watch: (watcher: (update: Update) => void) => {
       if (watchers.size === 0) inn();
       watchers.add(watcher);
 
-      return () => {
+      const unwatch = () => {
         watchers.delete(watcher);
         if (watchers.size === 0) out();
       };
+
+      return unwatch;
     },
     emit: <T extends Update>(update: T): T => {
       watchers.forEach((watcher) => watcher(update));

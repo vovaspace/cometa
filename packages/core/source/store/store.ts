@@ -1,10 +1,13 @@
-import { Event, createExecutableEvent } from '../event';
-import { emitStoreCreated } from '../lifecycle';
+import { createExoticExecutableEvent, Event, EventMeta } from '../event';
+import { Flow, FlowMeta } from '../flow';
+import { lifecycle } from '../lifecycle';
 import { createNode } from '../node';
-import { Flow } from '../flow';
+
+export interface StoreMeta extends FlowMeta, EventMeta {}
 
 export interface Store<T> extends Flow<T>, Event<T> {
   store: true;
+  meta: StoreMeta;
   set: (value: T) => void;
   reset: Event;
 }
@@ -15,28 +18,29 @@ export type AnyStore = Store<any>;
 export const createStore = <T>(initial: T): Store<T> => {
   let state = initial;
 
-  const { watch, emit, clear } = createNode<T>();
+  const { watch, emit } = createNode<T>();
 
-  const store = (next: T) => next !== state && emit((state = next));
+  const store: Store<T> = (next: T) => next !== state && emit((state = next));
 
   store.store = true as const;
   store.flow = true as const;
   store.event = true as const;
 
-  store.clear = clear;
   store.meta = {};
+  store.watch = watch;
 
   store.value = () => state;
-  store.watch = watch;
+
+  store.set = (next: T) => store(next);
+
+  store.reset = createExoticExecutableEvent<void, void>(() => store(initial));
+
   store.subscribe = (subscriber: (value: T) => void) => {
     subscriber(store.value());
     return watch(subscriber);
   };
 
-  store.set = (next: T) => store(next);
-  store.reset = createExecutableEvent<void, void>(() => store(initial));
-
-  return emitStoreCreated(store);
+  return lifecycle.store.created.emit(store);
 };
 
 export const store = createStore;

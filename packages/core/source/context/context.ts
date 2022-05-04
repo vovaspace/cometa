@@ -1,9 +1,15 @@
-import type { Node } from '../node';
+import type { Host } from '../host';
+import type { Queue } from '../queue';
+import type { Scope } from '../scope';
 
 export interface Context {
-  current: Node | null;
+  host: Host | null;
+  queue: Queue | null;
+  scope: Scope | null;
 }
 
 export const context: Context = {
-  current: null,
+  host: null,
+  queue: null,
+  scope: null,
 };

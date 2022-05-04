@@ -1,0 +1,41 @@
+{
+  "name": "cometa-react",
+  "version": "0.2.2",
+  "description": "React bindings for Cometa — the declarative state manager.",
+  "scripts": {
+    "test": "jest --colors",
+    "lib": "npm run clean && npm run comile && npm run meta",
+    "comile": "tsc -p tsconfig.esm.json & tsc -p tsconfig.cjs.json",
+    "meta": "node ../../tools/generate-manifest.js && cpy README.md LICENSE lib",
+    "clean": "rimraf ./lib",
+    "code:lint": "prettier --check . && eslint .",
+    "code:fix": "prettier --write . && eslint --fix ."
+  },
+  "license": "ISC",
+  "author": "Vladimir Lewandowski <me@vovaspace.com> (https://vovaspace.com/)",
+  "homepage": "https://cometa.js.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vovaspace/cometa.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/vovaspace/cometa/issues"
+  },
+  "keywords": [
+    "state manager",
+    "state management",
+    "state",
+    "store",
+    "event",
+    "effect",
+    "declarative",
+    "functional",
+    "reactive",
+    "frp"
+  ],
+  "peerDependencies": {
+    "@cometa/core": "^0.2.0",
+    "react": "18.0.0-rc.0"
+  }
+}

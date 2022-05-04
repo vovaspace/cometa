@@ -1,3 +1,7 @@
-export * from './models';
-export * from './queue';
-export * from './units';
+import * as event from './event';
+import * as store from './store';
+
+export const lifecycle = {
+  event,
+  store,
+};

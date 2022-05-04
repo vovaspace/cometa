@@ -10,6 +10,8 @@ const pkg = require(path.join(root, 'package.json'));
 const writeJSONSync = (p, content) =>
   fs.writeFileSync(p, JSON.stringify(content, null, 2));
 
+const name = () => `@cometa/${pkg.name.replace('cometa-', '')}`;
+
 const fields = (...names) =>
   names.reduce(
     (acc, name) => (pkg[name] ? { ...acc, [name]: pkg[name] } : acc),
@@ -17,7 +19,7 @@ const fields = (...names) =>
   );
 
 const manifest = {
-  name: `@cometa/${pkg.name}`,
+  name: name(),
   ...fields('version', 'description'),
   main: `./source/cjs/index.js`,
   module: `./source/esm/index.js`,
@@ -39,7 +41,7 @@ writeJSONSync(path.join(lib, 'package.json'), manifest);
 
 pkg.entrypoints?.forEach((entrypoint) => {
   const alias = {
-    name: `@cometa/${pkg.name}/${entrypoint}`,
+    name: `@cometa/${name()}/${entrypoint}`,
     main: `../source/cjs/${entrypoint}/index.js`,
     module: `../source/esm/${entrypoint}/index.js`,
     typings: `../source/typings/${entrypoint}/index.d.ts`,

@@ -82,11 +82,4 @@ describe('flow', () => {
 
     expect(notifier).toHaveBeenCalledTimes(2);
   });
-
-  it('runs a notifier immediately if its hot', () => {
-    const notifier = jest.fn();
-    createFlow(() => 0, notifier, true);
-
-    expect(notifier).toHaveBeenCalledTimes(1);
-  });
 });

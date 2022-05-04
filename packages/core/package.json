@@ -1,14 +1,16 @@
 {
-  "name": "core",
+  "name": "cometa-core",
   "version": "0.2.2",
   "description": "The declarative state manager.",
   "entrypoints": [
-    "lifecycle"
+    "context",
+    "lifecycle",
+    "scope"
   ],
   "scripts": {
     "test": "jest --colors",
     "lib": "npm run clean && npm run comile && npm run meta",
-    "comile": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json",
+    "comile": "tsc -p tsconfig.esm.json & tsc -p tsconfig.cjs.json",
     "meta": "node ../../tools/generate-manifest.js && cpy README.md LICENSE lib",
     "clean": "rimraf ./lib",
     "code:lint": "prettier --check . && eslint .",
