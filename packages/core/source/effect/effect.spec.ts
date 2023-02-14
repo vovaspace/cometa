@@ -218,6 +218,18 @@ describe("effect", () => {
 		context.current = RuntimeContext;
 	});
 
+	it("unbinds the listener", () => {
+		const listener = jest.fn();
+
+		const { effect } = setup();
+		const unlisten = effect.listen(listener);
+		unlisten();
+
+		effect(1);
+
+		expect(listener).not.toHaveBeenCalled();
+	});
+
 	it("notifies lifecycle", () => {
 		const subject = jest.spyOn(lifecycle.current, "subject");
 		const effect = createEffect(() => {});
