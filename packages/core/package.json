@@ -1,0 +1,42 @@
+{
+	"name": "core",
+	"version": "0.3.0",
+	"description": "The data-flow manager.",
+	"type": "module",
+	"entrypoints": [
+		"is",
+		"launch",
+		"lifecycle",
+		"registry",
+		"scheduler"
+	],
+	"scripts": {
+		"test": "jest --config ../../jest.config.js",
+		"lib": "npm run clean && npm run compile && npm run meta",
+		"clean": "rm -rf ./lib",
+		"compile": "tsc -p tsconfig.esm.json & tsc -p tsconfig.cjs.json",
+		"meta": "node ../../tooling/manifest.js && cp README.md LICENSE lib"
+	},
+	"license": "ISC",
+	"author": "Vladimir Lewandowski <me@vovaspace.com> (https://vovaspace.com/)",
+	"homepage": "https://cometa.js.org",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/vovaspace/cometa.git",
+		"directory": "packages/core"
+	},
+	"bugs": {
+		"url": "https://github.com/vovaspace/cometa/issues"
+	},
+	"keywords": [
+		"declarative",
+		"event-driven",
+		"functional",
+		"reactive",
+		"state",
+		"manager",
+		"store",
+		"event",
+		"effect"
+	]
+}
