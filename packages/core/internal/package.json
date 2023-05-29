@@ -1,0 +1,7 @@
+{
+	"name": "@cometa/core/internal",
+	"main": "../lib/cjs/internal.cjs",
+	"module": "../lib/esm/internal.js",
+	"types": "../lib/declaration/internal.d.ts",
+	"sideEffects": false
+}

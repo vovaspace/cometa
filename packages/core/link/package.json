@@ -1,0 +1,7 @@
+{
+	"name": "@cometa/core/link",
+	"main": "../lib/cjs/link.cjs",
+	"module": "../lib/esm/link.js",
+	"types": "../lib/declaration/link.d.ts",
+	"sideEffects": false
+}

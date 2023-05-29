@@ -1,21 +1,40 @@
 {
-	"name": "core",
+	"name": "@cometa/core",
 	"version": "0.3.0",
 	"description": "The data-flow manager.",
 	"type": "module",
-	"entrypoints": [
-		"is",
-		"launch",
-		"lifecycle",
-		"registry",
-		"scheduler"
-	],
 	"scripts": {
 		"test": "jest --config ../../jest.config.js",
-		"lib": "npm run clean && npm run compile && npm run meta",
+		"lib": "run-s clean compile make",
 		"clean": "rm -rf ./lib",
-		"compile": "tsc -p tsconfig.esm.json & tsc -p tsconfig.cjs.json",
-		"meta": "node ../../tooling/manifest.js && cp README.md LICENSE lib"
+		"compile": "run-p compile:*",
+		"compile:esm": "tsc -p tsconfig.esm.json",
+		"compile:cjs": "tsc -p tsconfig.cjs.json",
+		"make": "run-s make:*",
+		"make:cleanup": "node ../../tooling/cleanup.js",
+		"make:aliases": "node ../../tooling/aliases.js",
+		"make:pathes": "node ../../tooling/pathes.js"
+	},
+	"main": "./lib/cjs/index.cjs",
+	"module": "./lib/esm/index.js",
+	"types": "./lib/declaration/index.d.ts",
+	"sideEffects": false,
+	"exports": {
+		".": {
+			"require": "./lib/cjs/index.cjs",
+			"types": "./lib/declaration/index.d.ts",
+			"default": "./lib/esm/index.js"
+		},
+		"./internal": {
+			"require": "./lib/cjs/internal.cjs",
+			"types": "./lib/declaration/internal.d.ts",
+			"default": "./lib/esm/internal.js"
+		},
+		"./link": {
+			"require": "./lib/cjs/link.cjs",
+			"types": "./lib/declaration/link.d.ts",
+			"default": "./lib/esm/link.js"
+		}
 	},
 	"license": "ISC",
 	"author": "Vladimir Lewandowski <me@vovaspace.com> (https://vovaspace.com/)",
@@ -38,5 +57,10 @@
 		"store",
 		"event",
 		"effect"
+	],
+	"files": [
+		"lib",
+		"internal",
+		"link"
 	]
 }

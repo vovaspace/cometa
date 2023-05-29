@@ -3,14 +3,21 @@
 	"type": "module",
 	"private": true,
 	"workspaces": [
+		"./examples/*",
 		"./packages/*"
 	],
 	"scripts": {
-		"test": "npm run test --workspaces",
-		"lib": "npm run lib --workspaces",
+		"test": "npm run test --workspaces --if-present",
+		"lib": "npm run lib --workspaces --if-present",
 		"code:lint": "prettier --check .",
-		"code:fix": "prettier --write ."
+		"code:fix": "prettier --write .",
+		"make:cleanup": "npm run make:cleanup --workspaces --if-present"
 	},
+	"workdirs": [
+		"source",
+		"lib",
+		"coverage"
+	],
 	"license": "ISC",
 	"author": "Vladimir Lewandowski <me@vovaspace.com> (https://vovaspace.com/)",
 	"homepage": "https://cometa.js.org",
@@ -28,7 +35,10 @@
 	"devDependencies": {
 		"@trivago/prettier-plugin-sort-imports": "^4.0.0",
 		"@types/jest": "^29.2.5",
+		"@types/react": "^18.0.28",
+		"@types/use-sync-external-store": "^0.0.3",
 		"jest": "^29.3.1",
+		"npm-run-all": "^4.1.5",
 		"prettier": "^2.8.3",
 		"ts-jest": "^29.0.5",
 		"typescript": "^4.9.5"
