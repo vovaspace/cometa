@@ -1,0 +1,62 @@
+{
+	"name": "@cometa/react",
+	"version": "0.3.0",
+	"description": "React bindings layer for Cometa, the data-flow manager.",
+	"type": "module",
+	"scripts": {
+		"test": "jest --config ../../jest.config.js",
+		"lib": "run-s clean compile make",
+		"clean": "rm -rf ./lib",
+		"compile": "run-p compile:*",
+		"compile:esm": "tsc -p tsconfig.esm.json",
+		"compile:cjs": "tsc -p tsconfig.cjs.json",
+		"make": "run-s make:*",
+		"make:cleanup": "node ../../tooling/cleanup.js",
+		"make:aliases": "node ../../tooling/aliases.js",
+		"make:pathes": "node ../../tooling/pathes.js"
+	},
+	"main": "./lib/cjs/index.js",
+	"module": "./lib/esm/index.js",
+	"types": "./lib/declaration/index.d.ts",
+	"sideEffects": false,
+	"exports": {
+		".": {
+			"require": "./lib/cjs/index.js",
+			"types": "./lib/declaration/index.d.ts",
+			"default": "./lib/esm/index.js"
+		},
+		"./scope": {
+			"require": "./lib/cjs/scope.cjs",
+			"types": "./lib/declaration/scope.d.ts",
+			"default": "./lib/esm/scope.js"
+		},
+		"./server": {
+			"require": "./lib/cjs/server.cjs",
+			"types": "./lib/declaration/server.d.ts",
+			"default": "./lib/esm/server.js"
+		}
+	},
+	"license": "ISC",
+	"author": "Vladimir Lewandowski <me@vovaspace.com> (https://vovaspace.com/)",
+	"homepage": "https://cometa.js.org",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/vovaspace/cometa.git",
+		"directory": "packages/react"
+	},
+	"bugs": {
+		"url": "https://github.com/vovaspace/cometa/issues"
+	},
+	"dependencies": {
+		"use-sync-external-store": "^1.2.0"
+	},
+	"peerDependencies": {
+		"@cometa/core": "^0.3.0",
+		"react": "^16.8.0 || ^17 || ^18"
+	},
+	"files": [
+		"lib",
+		"scope",
+		"server"
+	]
+}
