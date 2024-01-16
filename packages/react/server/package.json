@@ -1,7 +1,7 @@
 {
 	"name": "@cometa/react/server",
-	"main": "../lib/cjs/server.cjs",
-	"module": "../lib/esm/server.js",
-	"types": "../lib/declaration/server.d.ts",
+	"main": "../lib/server.cjs",
+	"module": "../lib/server.js",
+	"types": "../lib/server.d.ts",
 	"sideEffects": false
 }

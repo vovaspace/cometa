@@ -1,4 +1,4 @@
-export const enum ResourceStatus {
+export enum ResourceStatus {
 	Initial,
 	Pending,
 	Resolved,
@@ -16,7 +16,7 @@ interface PendingResource<T> {
 
 interface ResolvedResource<T> {
 	status: ResourceStatus.Resolved;
-	result: T;
+	instance: T;
 }
 
 interface RejectedResource {
@@ -30,28 +30,35 @@ export type Resource<T> = {
 		| PendingResource<T>
 		| ResolvedResource<T>
 		| RejectedResource;
+	obsolete: boolean;
 	resolve: () => PendingResource<T> | ResolvedResource<T> | RejectedResource;
-	reset: () => void;
+	cleanup: () => void;
 };
 
-export function createResource<T>(creator: () => Promise<T> | T): Resource<T> {
+export function createResource<T>(
+	builder: () => Promise<T> | T,
+	cleanup: (instance: T) => void,
+): Resource<T> {
 	const resource: Resource<T> = {
 		current: { status: ResourceStatus.Initial },
+		obsolete: false,
 		resolve() {
+			resource.obsolete = false;
+
 			if (resource.current.status !== ResourceStatus.Initial)
 				return resource.current;
 
-			const instance = creator();
+			const instance = builder();
 			resource.current =
 				instance instanceof Promise
 					? {
 							status: ResourceStatus.Pending,
 							promise: instance
 								.then(
-									(result) =>
+									(instance) =>
 										(resource.current = {
 											status: ResourceStatus.Resolved,
-											result,
+											instance,
 										}),
 								)
 								.catch(
@@ -64,13 +71,22 @@ export function createResource<T>(creator: () => Promise<T> | T): Resource<T> {
 					  }
 					: {
 							status: ResourceStatus.Resolved,
-							result: instance,
+							instance,
 					  };
 
 			return resource.current;
 		},
-		reset() {
-			resource.current = { status: ResourceStatus.Initial };
+		cleanup() {
+			const status = resource.current.status;
+			if (status === ResourceStatus.Pending) {
+				resource.obsolete = true;
+				resource.current.promise.then(
+					() => resource.obsolete && resource.cleanup(),
+				);
+			} else {
+				if (status === ResourceStatus.Resolved) cleanup(resource.current.instance);
+				resource.current = { status: ResourceStatus.Initial };
+			}
 		},
 	};
 
@@ -83,5 +99,5 @@ export function useResource<T>(resource: Resource<T>): T {
 	if (resolved.status === ResourceStatus.Pending) throw resolved.promise;
 	if (resolved.status === ResourceStatus.Rejected) throw resolved.error;
 
-	return resolved.result;
+	return resolved.instance;
 }

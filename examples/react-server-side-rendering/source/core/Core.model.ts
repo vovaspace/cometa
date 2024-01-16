@@ -1,4 +1,4 @@
-import { Event, event, factory, store, Store } from "@cometa/core";
+import { Event, event, model, store, Store } from "@cometa/core";
 import { link } from "@cometa/core/link";
 
 export interface CoreModel {
@@ -7,7 +7,7 @@ export interface CoreModel {
 	increased: Event<void>;
 }
 
-export const createCoreModel = factory<CoreModel>(() => {
+export const createCoreModel = model<CoreModel>(() => {
 	const counter = store(0);
 	const sault = store("");
 

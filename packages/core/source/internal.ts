@@ -1,16 +1,20 @@
-export { type Context, RuntimeContext, context } from "./context";
-export { type Coupling, CouplingRegistry, uncouple } from "./coupling";
-export { type Dispatcher, DispatchersRegistry } from "./dispatcher";
-export { type Instance } from "./factory";
+export { RuntimeContext, context, type Context } from "./context";
+export { CouplingRegistry, uncouple, type Coupling } from "./coupling";
+export { DispatchersRegistry, type Dispatcher } from "./dispatcher";
 export { hydration } from "./hydration";
 export {
-	isWithProtocol,
 	isChannel,
-	isEvent,
-	isStream,
+	isModel,
+	isRoutine,
 	isStore,
-	isEffect,
-	isInstance,
+	isStream,
+	isThread,
+	isWithProtocol,
 } from "./is";
-export { type Lifecycle, RuntimeLifecycle, lifecycle } from "./lifecycle";
+export { RuntimeLifecycle, lifecycle, type Lifecycle } from "./lifecycle";
+export {
+	type AbstractFactory,
+	type AbstractFactoryDependencies,
+	type AbstractFactoryInstance,
+} from "./model";
 export { StoreConfigurationsRegistry } from "./store";

@@ -23,9 +23,10 @@
 	},
 	"dependencies": {
 		"@babel/runtime": "^7.20.13",
-		"@cometa/core": "^0.3.0",
-		"@cometa/react": "^0.3.0",
+		"@cometa/core": "file:../../packages/core",
+		"@cometa/react": "file:../../packages/react",
 		"express": "^4.18.2",
+		"random-words": "^2.0.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0"
 	},

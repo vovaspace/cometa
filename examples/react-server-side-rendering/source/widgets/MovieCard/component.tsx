@@ -1,6 +1,8 @@
-import { useMovieCardModel } from "./model";
-import { useSource } from "@cometa/react";
 import { FC } from "react";
+
+import { useSource } from "@cometa/react";
+
+import { useMovieCardModel } from "./model";
 
 export const MovieComponent: FC = () => {
 	const model = useMovieCardModel();

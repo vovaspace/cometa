@@ -1,7 +1,7 @@
-import { type Channel } from "./channel";
-import { type Link, link, unlink } from "./link";
+import { link, type Link, unlink } from "./link";
 import { type Protocol, type WithProtocol } from "./protocol";
 import { type Stream } from "./stream";
+import { type Thread } from "./thread";
 
 export interface DispatcherProtocol extends Protocol {
 	dispatcher: true;
@@ -25,7 +25,7 @@ export interface DispatcherController {
 }
 
 export const DispatchersRegistry = new WeakMap<
-	Channel<unknown>,
+	Thread<unknown>,
 	Dispatcher<unknown>
 >();
 
@@ -52,8 +52,8 @@ export function createDispatcher<
 		}
 	}
 
-	let links = new Map<Channel<any>, Link<any, any, any>>();
-	let sources = new Set<Channel<any>>();
+	let links = new Map<Thread<any>, Link<any, any, any>>();
+	let sources = new Set<Thread<any>>();
 
 	const hot: DispatcherController = {
 		spy(source) {

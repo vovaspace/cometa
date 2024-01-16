@@ -1,7 +1,7 @@
-import { effect } from "./effect";
-import { event } from "./event";
+import { channel } from "./channel";
 import { hydration } from "./hydration";
 import { link } from "./link";
+import { routine } from "./routine";
 import { store } from "./store";
 import { stream, StreamController } from "./stream";
 
@@ -9,7 +9,7 @@ describe("scheduler", () => {
 	describe("linking", () => {
 		describe("notifying", () => {
 			it("links clock to target without payload", () => {
-				const trigger = event<number>();
+				const trigger = channel<number>();
 				const target = jest.fn<void, []>();
 
 				link({ clock: { subject: trigger }, target });
@@ -22,7 +22,7 @@ describe("scheduler", () => {
 
 		describe("forwarding", () => {
 			it("links clock to target with payload", () => {
-				const trigger = event<number>();
+				const trigger = channel<number>();
 				const target = jest.fn<void, [number]>();
 
 				link({ clock: { subject: trigger }, target });
@@ -33,7 +33,7 @@ describe("scheduler", () => {
 			});
 
 			it("links guarded clock to target", () => {
-				const trigger = event<number | string>();
+				const trigger = channel<number | string>();
 				const target = jest.fn<void, [number]>();
 
 				link({
@@ -54,7 +54,7 @@ describe("scheduler", () => {
 			});
 
 			it("links clock to target with filtering", () => {
-				const trigger = event<number>();
+				const trigger = channel<number>();
 				const target = jest.fn<void, [number]>();
 
 				link({
@@ -75,7 +75,7 @@ describe("scheduler", () => {
 			});
 
 			it("links guarded clock to target with filtering", () => {
-				const trigger = event<string | number>();
+				const trigger = channel<string | number>();
 				const filter = jest.fn((payload: number) => payload % 2 === 0);
 				const target = jest.fn<void, [number]>();
 
@@ -104,7 +104,7 @@ describe("scheduler", () => {
 			});
 
 			it("links clock to target with sourcing and filtering", () => {
-				const trigger = event<number>();
+				const trigger = channel<number>();
 				const active = store<boolean>(false);
 				const target = jest.fn<void, [number]>();
 
@@ -134,7 +134,7 @@ describe("scheduler", () => {
 			});
 
 			it("links clock to target with guarded sourcing and filtering", () => {
-				const trigger = event<number>();
+				const trigger = channel<number>();
 				const active = store<boolean | null>(null);
 				const filter = jest.fn(
 					(payload: number, source: boolean) => source && payload % 2 === 0,
@@ -175,7 +175,7 @@ describe("scheduler", () => {
 			});
 
 			it("links guarded clock to target with sourcing and filtering", () => {
-				const trigger = event<string | number>();
+				const trigger = channel<string | number>();
 				const active = store<boolean>(false);
 				const reader = jest.spyOn(active, "read");
 				const filter = jest.fn(
@@ -219,7 +219,7 @@ describe("scheduler", () => {
 			});
 
 			it("links guarded clock to target with guarded sourcing and filtering", () => {
-				const trigger = event<string | number>();
+				const trigger = channel<string | number>();
 				const active = store<boolean | null>(null);
 				const reader = jest.spyOn(active, "read");
 				const sguard = jest.fn(
@@ -293,7 +293,7 @@ describe("scheduler", () => {
 
 		describe("mapping", () => {
 			it("links clock to target with mapping", () => {
-				const trigger = event<string>();
+				const trigger = channel<string>();
 				const target = jest.fn<void, [number]>();
 
 				link({
@@ -310,7 +310,7 @@ describe("scheduler", () => {
 			});
 
 			it("links guarded clock to target with mapping", () => {
-				const trigger = event<string | number>();
+				const trigger = channel<string | number>();
 				const map = jest.fn((payload: number) => payload * 10);
 				const target = jest.fn<void, [number]>();
 
@@ -334,7 +334,7 @@ describe("scheduler", () => {
 			});
 
 			it("links clock to target with filtering and mapping", () => {
-				const trigger = event<string>();
+				const trigger = channel<string>();
 				const map = jest.fn((payload: string) => Number.parseInt(payload, 10));
 				const target = jest.fn<void, [number]>();
 
@@ -358,7 +358,7 @@ describe("scheduler", () => {
 			});
 
 			it("links guarded clock to target with filtering and mapping", () => {
-				const trigger = event<string | number>();
+				const trigger = channel<string | number>();
 				const filter = jest.fn((payload: number) => payload % 2 === 0);
 				const map = jest.fn((payload: number) => payload * 10);
 				const target = jest.fn<void, [number]>();
@@ -391,7 +391,7 @@ describe("scheduler", () => {
 			});
 
 			it("links clock to target with sourcing and mapping", () => {
-				const trigger = event<number>();
+				const trigger = channel<number>();
 				const multiplier = store<number>(10);
 				const target = jest.fn<void, [number]>();
 
@@ -412,7 +412,7 @@ describe("scheduler", () => {
 			});
 
 			it("links clock to target with guarded sourcing and mapping", () => {
-				const trigger = event<number>();
+				const trigger = channel<number>();
 				const multiplier = store<number | null>(null);
 				const map = jest.fn((payload: number, source: number) => payload * source);
 				const target = jest.fn<void, [number]>();
@@ -441,7 +441,7 @@ describe("scheduler", () => {
 			});
 
 			it("links guarded clock to target with sourcing and mapping", () => {
-				const trigger = event<string | number>();
+				const trigger = channel<string | number>();
 				const multiplier = store<number>(10);
 				const reader = jest.spyOn(multiplier, "read");
 				const map = jest.fn((payload: number, source: number) => payload * source);
@@ -471,7 +471,7 @@ describe("scheduler", () => {
 			});
 
 			it("links guarded clock to target with guarded sourcing and mapping", () => {
-				const trigger = event<string | number>();
+				const trigger = channel<string | number>();
 				const multiplier = store<number | null>(null);
 				const reader = jest.spyOn(multiplier, "read");
 				const sguard = jest.fn(
@@ -524,7 +524,7 @@ describe("scheduler", () => {
 			});
 
 			it("links clock to target with sourcing, filtering and mapping", () => {
-				const trigger = event<number>();
+				const trigger = channel<number>();
 				const multiplier = store<number>(5);
 				const map = jest.fn((payload: number, source: number) => payload * source);
 				const target = jest.fn<void, [number]>();
@@ -558,7 +558,7 @@ describe("scheduler", () => {
 			});
 
 			it("links clock to target with guarded sourcing, filtering and mapping", () => {
-				const trigger = event<number>();
+				const trigger = channel<number>();
 				const multiplier = store<number | null>(null);
 				const filter = jest.fn(
 					(payload: number, source: number) =>
@@ -605,7 +605,7 @@ describe("scheduler", () => {
 			});
 
 			it("links guarded clock to target with sourcing, filtering and mapping", () => {
-				const trigger = event<string | number>();
+				const trigger = channel<string | number>();
 				const multiplier = store<number>(5);
 				const reader = jest.spyOn(multiplier, "read");
 				const filter = jest.fn(
@@ -654,7 +654,7 @@ describe("scheduler", () => {
 			});
 
 			it("links guarded clock to target with guarded sourcing, filtering and mapping", () => {
-				const trigger = event<string | number>();
+				const trigger = channel<string | number>();
 				const multiplier = store<number | null>(null);
 				const reader = jest.spyOn(multiplier, "read");
 				const sguard = jest.fn(
@@ -738,7 +738,7 @@ describe("scheduler", () => {
 			const derived = stream<number>(
 				(ctrl) => ctrl.spy(base) * ctrl.spy(multiplier),
 			);
-			const trigger = event();
+			const trigger = channel();
 			const target = jest.fn();
 
 			link({
@@ -775,7 +775,7 @@ describe("scheduler", () => {
 			);
 			derived.listen(listener);
 
-			const trigger = event();
+			const trigger = channel();
 
 			link({
 				clock: {
@@ -803,16 +803,16 @@ describe("scheduler", () => {
 	});
 
 	describe("handling", () => {
-		it("handles exception inside effect", () => {
+		it("handles exception inside routine", () => {
 			const handler = jest.fn();
-			const fx = effect(handler);
-			const trigger = event();
+			const r = routine(handler);
+			const trigger = channel();
 
 			link({
 				clock: {
 					subject: trigger,
 				},
-				target: fx,
+				target: r,
 			});
 
 			const error = new Error();
@@ -838,7 +838,7 @@ describe("scheduler", () => {
 				target: proxy,
 			});
 
-			const target = event();
+			const target = channel();
 			const targetListener = jest.fn();
 			target.listen(targetListener);
 			link({

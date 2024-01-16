@@ -1,24 +1,24 @@
-import { read } from "./read";
-import { type Scope } from "./scope";
-import { type TokenKey } from "./token";
-import { type Serialized, type Store } from "@cometa/core";
+import { type Model, type Serialized, type Store } from "@cometa/core";
 import {
 	CouplingRegistry,
-	type Instance,
 	isStore,
 	StoreConfigurationsRegistry,
 } from "@cometa/core/internal";
 
+import { read } from "./read";
+import { type Scope } from "./scope";
+import { type TokenKey } from "./token";
+
 function flatten(
 	key: TokenKey,
-	instance: Instance<{}>,
+	model: Model<{}>,
 	serializable: Map<TokenKey, Store<any>[]>,
 	serveronly: Map<TokenKey, Store<any>>,
 	acc: Store<any>[] = [],
 	iteration = 0,
 	root = true,
 ) {
-	const coupling = CouplingRegistry.get(instance);
+	const coupling = CouplingRegistry.get(model);
 	if (coupling) {
 		const subjects = coupling.subjects;
 		const sl = subjects.length;
@@ -26,9 +26,9 @@ function flatten(
 			for (let i = 0; i < sl; i++) {
 				const subject = subjects[i]!;
 				if (isStore(subject)) {
-					const configuration = StoreConfigurationsRegistry.get(subject);
-					if (configuration?.serialization !== false) {
-						if (configuration?.serveronly)
+					const configuration = StoreConfigurationsRegistry.get(subject)!;
+					if (configuration.serialization !== false) {
+						if (configuration.serveronly)
 							serveronly.set(`${key}.${iteration}`, subject);
 						else acc.push(subject);
 						iteration++;
@@ -36,20 +36,12 @@ function flatten(
 				}
 			}
 
-		const instances = coupling.instances;
-		const il = subjects.length;
+		const models = coupling.models;
+		const ml = models.length;
 
-		if (il > 0)
-			for (let i = 0; i < il; i++)
-				flatten(
-					key,
-					instances[i]!,
-					serializable,
-					serveronly,
-					acc,
-					iteration,
-					false,
-				);
+		if (ml > 0)
+			for (let i = 0; i < ml; i++)
+				flatten(key, models[i]!, serializable, serveronly, acc, iteration, false);
 	}
 
 	if (root) serializable.set(key, acc);
@@ -78,7 +70,7 @@ export const createScope = (): Scope => {
 
 			if (serializable.size > 0) {
 				serializable.forEach((stores, key) => {
-					const states: Serialized[] = [];
+					const states = [];
 
 					for (let i = 0, length = stores.length; i < length; i++) {
 						const store = stores[i]!;

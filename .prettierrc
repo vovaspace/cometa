@@ -6,5 +6,11 @@
 	"trailingComma": "all",
 	"importOrderSeparation": true,
 	"importOrderSortSpecifiers": true,
-	"importOrderCaseInsensitive": true
+	"importOrderCaseInsensitive": true,
+	"importOrder": [
+		"^node:(.*)$",
+		"<THIRD_PARTY_MODULES>",
+		"^@cometa/(.*)$",
+		"^[./]"
+	]
 }

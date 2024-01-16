@@ -1,5 +1,5 @@
+import { channel } from "./channel";
 import { createDispatcher, DispatchersRegistry } from "./dispatcher";
-import { event } from "./event";
 import { link, unlink } from "./link";
 
 describe("link", () => {
@@ -10,7 +10,7 @@ describe("link", () => {
 			setup,
 			() => {},
 		);
-		const subject = event();
+		const subject = channel();
 
 		DispatchersRegistry.set(subject, dispatcher);
 
@@ -44,7 +44,7 @@ describe("link", () => {
 			},
 			() => {},
 		);
-		const subject = event();
+		const subject = channel();
 
 		DispatchersRegistry.set(subject, dispatcher);
 

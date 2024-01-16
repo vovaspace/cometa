@@ -1,13 +1,15 @@
-import { AppComponent } from "./app";
-import { createCoreModel, withCore } from "./core";
-import { withMovie } from "./modules/Movie";
+import { createRequire } from "node:module";
+import { join, resolve } from "node:path";
+
+import express from "express";
+import { renderToPipeableStream } from "react-dom/server";
+
 import { CometaProvider } from "@cometa/react";
 import { createScope } from "@cometa/react/scope";
 import { Duplex } from "@cometa/react/server";
-import express from "express";
-import { createRequire } from "node:module";
-import { join, resolve } from "node:path";
-import { renderToPipeableStream } from "react-dom/server";
+
+import { App } from "./app";
+import { CoreProvider, createCoreModel } from "./core";
 
 const require = createRequire(import.meta.url);
 
@@ -26,11 +28,11 @@ app.get("/", (request, response) => {
 	const core = createCoreModel();
 	core.sault.set((query.sault as string) ?? "");
 
-	const Root = withCore(core)(withMovie(AppComponent));
-
 	const stream = renderToPipeableStream(
 		<CometaProvider scope={scope}>
-			<Root />
+			<CoreProvider value={core}>
+				<App />
+			</CoreProvider>
 		</CometaProvider>,
 		{
 			bootstrapScripts: stats.assetsByChunkName.main,

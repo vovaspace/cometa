@@ -1,32 +1,34 @@
-import { type Scope } from "./scope";
 import { Duplex as NodeDuplex } from "node:stream";
 
-interface DuplexWindowFields {
+import { type Scope } from "./scope";
+
+export interface DuplexConfigurationWindow {
 	scope: string;
 	state: string;
 }
 
-const DefaultDuplexWindowFields: DuplexWindowFields = {
+const DefaultDuplexConfigurationWindow: DuplexConfigurationWindow = {
 	scope: "scope",
 	state: "state",
 };
 
 export interface DuplexConfiguration {
-	window?: DuplexWindowFields;
+	window?: DuplexConfigurationWindow;
 }
+
+const DefaultConfiguration: DuplexConfiguration = {
+	window: DefaultDuplexConfigurationWindow,
+};
 
 const empty = "{}";
 
 export class Duplex extends NodeDuplex {
-	private window: DuplexWindowFields;
-	private written = false;
+	private window: DuplexConfigurationWindow;
+	private written: boolean = false;
 
-	constructor(
-		private scope: Scope,
-		configuration: DuplexConfiguration = { window: DefaultDuplexWindowFields },
-	) {
+	constructor(private scope: Scope, configuration = DefaultConfiguration) {
 		super();
-		this.window = configuration.window || DefaultDuplexWindowFields;
+		this.window = configuration.window || DefaultDuplexConfigurationWindow;
 	}
 
 	_read() {}
@@ -35,7 +37,7 @@ export class Duplex extends NodeDuplex {
 		chunk: any,
 		encoding: BufferEncoding,
 		callback: (error?: Error | null) => void,
-	): void {
+	) {
 		const dehydrated = this.scope.dehydrate();
 		const state = JSON.stringify(dehydrated[0]);
 		const serverstate = JSON.stringify(dehydrated[1]);

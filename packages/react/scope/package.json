@@ -1,7 +1,7 @@
 {
 	"name": "@cometa/react/scope",
-	"main": "../lib/cjs/scope.cjs",
-	"module": "../lib/esm/scope.js",
-	"types": "../lib/declaration/scope.d.ts",
+	"main": "../lib/scope.cjs",
+	"module": "../lib/scope.js",
+	"types": "../lib/scope.d.ts",
 	"sideEffects": false
 }

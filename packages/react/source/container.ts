@@ -1,205 +1,186 @@
 import {
-	createResource,
-	type Resource,
-	ResourceStatus,
-	useResource,
-} from "./resource";
-import { isToken, type Token, type Tokenized, type TokenKey } from "./token";
-import {
 	createContext,
 	createElement,
-	type FC,
+	type FunctionComponent,
 	type ReactNode,
 	useContext,
 	useEffect,
 	useState,
 } from "react";
 
-export const enum BindingScope {
-	Singleton,
-	Transient,
+import { type AbstractFactory } from "@cometa/core/internal";
+
+import {
+	createResource,
+	Resource,
+	ResourceStatus,
+	useResource,
+} from "./resource";
+import { isToken, type Token, type Tokenized, type TokenKey } from "./token";
+
+export enum BindingScope {
 	Resolution,
+	Singleton,
 }
 
-interface Binding<Result, Input extends {}> {
-	creator: (
-		...parameters: {} extends Input ? [] : [input: Input]
-	) => Result | Promise<Result>;
-	input: (() => Tokenized<Input>) | null;
-	cleanup: (result: Result) => void;
-	scope: BindingScope;
+type SingletonBinding<Instance> = {
+	scope: BindingScope.Singleton;
+	instance: Instance;
+};
+
+type ResolutionBinding<Instance, Dependencies extends {}> = {
+	scope: BindingScope.Resolution;
+	factory: AbstractFactory<Instance | Promise<Instance>, Dependencies>;
+	dependencies: (() => Tokenized<Dependencies>) | null;
+	cleanup: (instance: Instance) => void;
 	pure: boolean;
-}
+};
+
+type Binding<Instance, Dependencies extends {}> =
+	| SingletonBinding<Instance>
+	| ResolutionBinding<Instance, Dependencies>;
 
 export interface Resolution<T> {
 	resource: Resource<T>;
-	taken: number;
 	take: () => () => void;
+	taken: number;
 }
 
 export interface Container {
-	bind: <Result, Input extends {}>(
+	bind: <Instance, Dependencies extends {}>(
 		key: TokenKey,
-		binding: Binding<Result, Input>,
-	) => Resolution<Result>;
+		binding: Binding<Instance, Dependencies>,
+	) => Resolution<Instance>;
 	unbind: (key: TokenKey) => void;
-	resolve: <T>(token: Token<T>) => Resolution<T>;
+	resolve: <T>(key: TokenKey) => Resolution<T>;
 }
 
-type Dependencies = (() => void)[];
-
-interface Context {
-	dependencies: Dependencies;
-}
-
-function detokenize(
-	context: Context,
+function detokenize<Dependencies extends {}>(
+	cleanups: (() => void)[],
 	container: Container,
-	input: {},
-): Promise<void>[] {
-	const dependencies = context.dependencies;
-	const promises: Promise<void>[] = [];
+	dependencies: Tokenized<Dependencies>,
+): Dependencies | Promise<Dependencies> {
+	const promises = [];
+	const output: Record<string, unknown> = {};
 
-	const entries = Object.entries(input);
+	const entries = Object.entries(dependencies);
 	for (let i = 0, length = entries.length; i < length; i++) {
 		const entry = entries[i]!;
 		const value = entry[1];
 
 		if (isToken(value)) {
-			const resolution = container.resolve(value);
+			const resolution = container.resolve(value.key);
 
-			dependencies.push(resolution.take());
-
+			cleanups.push(resolution.take());
 			const resolved = resolution.resource.resolve();
 
 			if (resolved.status === ResourceStatus.Rejected) throw resolved.error;
 
 			if (resolved.status === ResourceStatus.Resolved)
-				// @ts-expect-error: type 'string' can't be used to index type 'Tokenized<I>'.
-				input[entry[0]] = resolved.result;
+				output[entry[0]] = resolved.instance;
 
 			if (resolved.status === ResourceStatus.Pending)
 				promises.push(
 					resolved.promise.then((r) => {
 						if (r.status === ResourceStatus.Rejected) throw r.error;
-						if (r.status === ResourceStatus.Resolved)
-							// @ts-expect-error: type 'string' can't be used to index type 'Tokenized<I>'.
-							input[entry[0]] = resolved.result;
+						if (r.status === ResourceStatus.Resolved) output[entry[0]] = r.instance;
 					}),
 				);
 		}
 	}
 
-	return promises;
+	return promises.length === 0
+		? Promise.all(promises).then(() => output as Dependencies)
+		: (output as Dependencies);
 }
 
-function createResolution<Result, Input extends {}>(
-	context: Context,
-	container: Container,
-	key: TokenKey,
-	binding: Binding<Result, Input>,
-): Resolution<Result> {
-	const dependencies: Dependencies = [];
+const noop = () => () => {};
 
-	const creator = binding.creator;
-	const input = binding.input;
+function createResolution<Instance, Dependencies extends {}>(
+	container: Container,
+	binding: Binding<Instance, Dependencies>,
+): Resolution<Instance> {
 	const scope = binding.scope;
+
+	if (scope === BindingScope.Singleton) {
+		const instance = binding.instance;
+		return {
+			resource: createResource(() => instance, noop),
+			take: noop,
+			taken: Infinity,
+		};
+	}
+
+	const dependencies = binding.dependencies;
+	const factory = binding.factory;
 	const pure = binding.pure;
 
-	const resource = createResource(() => {
-		const current = context.dependencies;
-		context.dependencies = dependencies;
+	const cleanups: (() => void)[] = [];
 
-		let result: Result | Promise<Result>;
-
-		if (input) {
-			const i = input();
-			const promises = detokenize(context, container, i);
-
-			const create = () => (creator as (input: Input) => Result)(i as Input);
-
-			result = promises.length
-				? Promise.all(promises).then(create)
-				: pure
-				? create()
-				: Promise.resolve().then(create);
-
-			if (
-				typeof window !== "undefined" &&
-				scope !== BindingScope.Singleton &&
-				result instanceof Promise
-			)
-				result.then(purge);
-		} else {
-			result = pure
-				? (creator as () => Result)()
-				: Promise.resolve().then(creator as () => Result);
-		}
-
-		context.dependencies = current;
-		return result;
-	});
-
-	let taken = 0;
-
-	const cleanup = binding.cleanup;
-	function reset() {
-		const current = resource.current;
-
-		if (taken === 0 && current.status !== ResourceStatus.Initial) {
-			if (current.status === ResourceStatus.Resolved) cleanup(current.result);
-
-			resource.reset();
-
-			if (scope === BindingScope.Transient) container.unbind(key);
-
-			if (dependencies.length) {
-				let current: (() => void) | undefined;
-				while ((current = dependencies.shift())) current();
+	const resource = createResource(
+		() => {
+			if (dependencies) {
+				const d = detokenize(cleanups, container, dependencies());
+				return d instanceof Promise
+					? d.then(factory)
+					: pure
+					? factory(d)
+					: Promise.resolve().then(() => factory(d));
 			}
-		}
-	}
 
-	function purge() {
-		setTimeout(reset, 1_000);
-	}
-
-	const resolution: Resolution<Result> = {
-		resource,
-		taken,
-		take() {
-			taken++;
-			return () => (taken--, scope !== BindingScope.Singleton && purge());
+			return pure
+				? (factory as () => Instance)()
+				: Promise.resolve().then(factory as () => Instance);
 		},
+		(instance) => {
+			binding.cleanup(instance);
+
+			let current;
+			while ((current = cleanups.shift())) current();
+		},
+	);
+
+	function cleanup() {
+		if (resolution.taken === 0) resource.cleanup();
+	}
+
+	let timeout: NodeJS.Timeout;
+	function purge() {
+		resolution.taken--;
+		clearTimeout(timeout);
+		timeout = setTimeout(cleanup, 1_000);
+	}
+
+	const resolution: Resolution<Instance> = {
+		resource,
+		take: () => (resolution.taken++, purge),
+		taken: 0,
 	};
 
 	return resolution;
 }
 
-function createContainer(): Container {
-	const resolutions = new Map<TokenKey, Resolution<unknown>>();
-
-	const context: Context = {
-		dependencies: [],
-	};
+export function createContainer(): Container {
+	const resolutions: Record<TokenKey, Resolution<unknown> | null> = {};
 
 	const container: Container = {
-		bind<Result, Input extends {}>(
+		bind<Instance, Dependencies extends {}>(
 			key: TokenKey,
-			binding: Binding<Result, Input>,
-		): Resolution<Result> {
-			const current = resolutions.get(key) as Resolution<Result> | undefined;
-			if (current) return current;
+			binding: Binding<Instance, Dependencies>,
+		): Resolution<Instance> {
+			const current = resolutions[key];
+			if (current) return current as Resolution<Instance>;
 
-			const resolution = createResolution(context, container, key, binding);
-			resolutions.set(key, resolution);
+			const resolution = createResolution(container, binding);
+			resolutions[key] = resolution;
 			return resolution;
 		},
 		unbind(key) {
-			resolutions.delete(key);
+			const current = resolutions[key];
+			if (current && current.taken === 0) resolutions[key] = null;
 		},
-		resolve<T>(token: Token<T>): Resolution<T> {
-			const current = resolutions.get(token.key);
+		resolve<T>(key: TokenKey): Resolution<T> {
+			const current = resolutions[key];
 			if (current) return current as Resolution<T>;
 
 			throw new Error("TODO: resolve error");
@@ -211,10 +192,12 @@ function createContainer(): Container {
 
 const ContainerContext = createContext<Container | null>(null);
 
-export const ContainerProvider: FC<{ children?: ReactNode }> = (props) =>
+export const ContainerProvider: FunctionComponent<{ children?: ReactNode }> = (
+	props,
+) =>
 	createElement(
 		ContainerContext.Provider,
-		{ value: useState<Container>(createContainer)[0] },
+		{ value: useState(createContainer)[0] },
 		props.children,
 	);
 
@@ -232,5 +215,5 @@ export function useResolution<T>(resolution: Resolution<T>): T {
 }
 
 export function useToken<T>(token: Token<T>): T {
-	return useResolution(useContainer().resolve(token));
+	return useResolution(useContainer().resolve(token.key));
 }

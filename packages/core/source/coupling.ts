@@ -1,20 +1,20 @@
-import { type Channel } from "./channel";
-import { type Instance } from "./factory";
 import { type Link, unlink } from "./link";
+import { type Model } from "./model";
+import { type Thread } from "./thread";
 
 export interface Coupling {
-	subjects: Channel<unknown>[];
+	subjects: Thread<unknown>[];
 	links: Link<any, any, any>[];
-	instances: Instance<{}>[];
+	models: Model<{}>[];
 }
 
-export const CouplingRegistry: WeakMap<Instance<{}>, Coupling> = new WeakMap();
+export const CouplingRegistry: WeakMap<Model<{}>, Coupling> = new WeakMap();
 
-export function uncouple(instance: Instance<{}>): void {
-	const coupling = CouplingRegistry.get(instance);
+export function uncouple(model: Model<{}>): void {
+	const coupling = CouplingRegistry.get(model);
 
 	if (coupling) {
 		coupling.links.forEach(unlink);
-		CouplingRegistry.delete(instance);
+		CouplingRegistry.delete(model);
 	}
 }

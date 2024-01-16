@@ -1,4 +1,5 @@
-import { CoreModel } from "./Core.model";
 import { relay } from "@cometa/react";
 
-export const [CoreToken, withCore] = relay<CoreModel>({ key: "core" });
+import { CoreModel } from "./Core.model";
+
+export const [CoreToken, CoreProvider] = relay<CoreModel>({ key: "core" });

@@ -1,6 +1,6 @@
-export type TokenKey = string;
-
 const TokenSymbol = Symbol("cometa/token");
+
+export type TokenKey = string;
 
 export interface Token<T> {
 	[TokenSymbol]: T;
@@ -14,7 +14,7 @@ export type Tokenized<T extends {}> = {
 };
 
 export const createToken = <T>(key: TokenKey): Token<T> => ({
-	[TokenSymbol]: null as unknown as T,
+	[TokenSymbol]: null as T,
 	key,
 });
 

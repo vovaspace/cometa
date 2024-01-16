@@ -1,4 +1,3 @@
-import { type Channel, type ChannelProtocol } from "./channel";
 import {
 	createDispatcher,
 	type DispatcherController,
@@ -8,12 +7,13 @@ import { lifecycle } from "./lifecycle";
 import { link, unlink } from "./link";
 import { notify } from "./scheduler";
 import { createSubscriber } from "./subscriber";
+import { type Thread, type ThreadProtocol } from "./thread";
 
-export interface StreamProtocol extends ChannelProtocol {
+export interface StreamProtocol extends ThreadProtocol {
 	stream: true;
 }
 
-export interface Stream<State> extends Channel<State> {
+export interface Stream<State> extends Thread<State> {
 	protocol: StreamProtocol;
 	read: () => State;
 	subscribe: (subscriber: (state: State) => void) => () => void;
@@ -27,7 +27,7 @@ export interface StreamController<State> extends DispatcherController {
 
 const protocol: StreamProtocol = {
 	cometa: true,
-	channel: true,
+	thread: true,
 	stream: true,
 } as const;
 

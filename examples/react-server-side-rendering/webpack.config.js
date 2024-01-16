@@ -1,5 +1,6 @@
-import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import { resolve } from "node:path";
+
+import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import { StatsWriterPlugin } from "webpack-stats-plugin";
 
 export default ({ development }) => ({

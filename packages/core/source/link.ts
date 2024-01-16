@@ -1,18 +1,18 @@
-import { type Channel, type ChannelPayload } from "./channel";
 import { DispatchersRegistry } from "./dispatcher";
 import { lifecycle } from "./lifecycle";
 import { type Stream, type StreamState } from "./stream";
+import { type Thread, type ThreadPayload } from "./thread";
 
 export type SubjectGuard<Payload, Target extends Payload> = (
 	payload: Payload,
 ) => payload is Target;
 
 export type LinkClock<
-	Subject extends Channel<any>,
-	Output extends ChannelPayload<Subject>,
+	Subject extends Thread<any>,
+	Output extends ThreadPayload<Subject>,
 > = {
 	subject: Subject;
-	guard?: SubjectGuard<ChannelPayload<Subject>, Output>;
+	guard?: SubjectGuard<ThreadPayload<Subject>, Output>;
 };
 
 export type LinkClockOutput<LC> = LC extends LinkClock<any, infer T>
@@ -71,11 +71,11 @@ export type Link<
 	Output,
 > = ForwardingLink<Clock, Source> | MappingLink<Clock, Source, Output>;
 
-export const graph = new WeakMap<Channel<unknown>, Link<any, any, any>[]>();
+export const graph = new WeakMap<Thread<unknown>, Link<any, any, any>[]>();
 
 export function link<
-	ClockSubject extends Channel<any>,
-	ClockOutput extends ChannelPayload<ClockSubject>,
+	ClockSubject extends Thread<any>,
+	ClockOutput extends ThreadPayload<ClockSubject>,
 	SourceSubject extends Stream<any>,
 	SourceOutput extends StreamState<SourceSubject>,
 	Output,

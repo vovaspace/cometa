@@ -1,15 +1,15 @@
-import { createScope as createClientScope } from "./scope.client";
-import { createScope as createServerScope } from "./scope.server";
-import { type TokenKey } from "./token";
-import { type Serialized, type Stream } from "@cometa/core";
-import { type Instance } from "@cometa/core/internal";
 import {
 	createContext,
-	createElement,
-	type FC,
+	type FunctionComponent,
 	type ReactNode,
 	useContext,
 } from "react";
+
+import { type Model, type Serialized, type Stream } from "@cometa/core";
+
+import { createScope as createClientScope } from "./scope.client";
+import { createScope as createServerScope } from "./scope.server";
+import { type TokenKey } from "./token";
 
 export type DehydratedScope = [
 	current: Record<TokenKey, Serialized[]>,
@@ -17,7 +17,7 @@ export type DehydratedScope = [
 ];
 
 export interface Scope {
-	bind: <I extends Instance<{}>>(key: TokenKey, instance: I) => I;
+	bind: <M extends Model<{}>>(key: TokenKey, model: M) => M;
 	read: <T>(source: Stream<T>) => T;
 	hydrate: (dehydrated: DehydratedScope) => Scope;
 	dehydrate: () => DehydratedScope;
@@ -28,9 +28,9 @@ export const createScope =
 
 const ScopeContext = createContext<Scope | null>(null);
 
-export const ScopeProvider: FC<{
+export const ScopeProvider: FunctionComponent<{
 	children?: ReactNode;
 	value: Scope | null;
-}> = (props) => createElement(ScopeContext.Provider, props);
+}> = ScopeContext.Provider;
 
 export const useScope = (): Scope | null => useContext(ScopeContext);

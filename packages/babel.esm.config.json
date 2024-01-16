@@ -1,0 +1,6 @@
+{
+	"presets": ["@babel/preset-typescript"],
+	"plugins": [["add-import-extension", { "extension": "js" }]],
+	"sourceMaps": "inline",
+	"ignore": ["**/*.spec.ts", "**/*.spec.tsx"]
+}

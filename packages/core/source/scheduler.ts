@@ -1,7 +1,6 @@
-import { type Channel, type ChannelPayload } from "./channel";
 import { type Dispatcher } from "./dispatcher";
 import { hydration } from "./hydration";
-import { isDispatcher, isEffect, isSubscriber, isWithProtocol } from "./is";
+import { isDispatcher, isRoutine, isSubscriber, isWithProtocol } from "./is";
 import {
 	graph,
 	Link,
@@ -12,9 +11,10 @@ import {
 } from "./link";
 import { type Stream } from "./stream";
 import { type Subscriber } from "./subscriber";
+import { type Thread, type ThreadPayload } from "./thread";
 
 function invoke(
-	link: Link<LinkClock<Channel<any>, any>, LinkSource<Stream<any>, any>, any>,
+	link: Link<LinkClock<Thread<any>, any>, LinkSource<Stream<any>, any>, any>,
 	payload: any,
 ): unknown {
 	const cg = link.clock.guard;
@@ -58,7 +58,7 @@ let subscribers = new Map<Subscriber<any>, unknown>();
 const noop = (): void => {};
 
 function perform(
-	link: Link<LinkClock<Channel<any>, any>, LinkSource<Stream<any>, any>, any>,
+	link: Link<LinkClock<Thread<any>, any>, LinkSource<Stream<any>, any>, any>,
 	payload: any,
 	shallow: boolean,
 ): void {
@@ -72,11 +72,12 @@ function perform(
 				dispatchers.sort(redispatch);
 			}
 		} else if (isSubscriber(target)) subscribers.set(target, payload);
-		else if (shallow) {
-		} else if (isEffect(target)) {
-			const result = invoke(link, payload);
-			if (result instanceof Promise) result.catch(noop);
-		} else invoke(link, payload);
+		else if (!shallow) {
+			if (isRoutine(target)) {
+				const result = invoke(link, payload);
+				if (result instanceof Promise) result.catch(noop);
+			} else invoke(link, payload);
+		}
 	} else if (!shallow) invoke(link, payload);
 }
 
@@ -109,16 +110,16 @@ function dequeue(force: boolean, shallow: boolean): void {
 	}
 }
 
-export function notify(subject: Channel<void>, payload?: never): void;
+export function notify(subject: Thread<void>, payload?: never): void;
 
-export function notify<Subject extends Channel<any>>(
+export function notify<Subject extends Thread<any>>(
 	subject: Subject,
-	payload: ChannelPayload<Subject>,
+	payload: ThreadPayload<Subject>,
 ): void;
 
-export function notify<Subject extends Channel<any>>(
+export function notify<Subject extends Thread<any>>(
 	subject: Subject,
-	payload: ChannelPayload<Subject>,
+	payload: ThreadPayload<Subject>,
 ): void {
 	level++;
 

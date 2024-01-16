@@ -9,10 +9,10 @@ import {
 export function read<T>(source: Stream<T>): T {
 	if (isStore(source))
 		return StoreConfigurationsRegistry.get(source)!.serialization === false
-			? (source.initial as T)
+			? source.initial
 			: source.read();
 
-	const dispatcher = DispatchersRegistry.get(source) as Dispatcher<T>;
+	const dispatcher = DispatchersRegistry.get(source)! as Dispatcher<T>;
 
 	const cold = dispatcher.cold;
 	const original = cold.spy;

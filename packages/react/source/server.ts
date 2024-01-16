@@ -1,1 +1,1 @@
-export { type DuplexConfiguration, Duplex } from "./duplex";
+export { Duplex } from "./duplex";

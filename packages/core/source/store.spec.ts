@@ -1,4 +1,4 @@
-import { event } from "./event";
+import { channel } from "./channel";
 import { lifecycle } from "./lifecycle";
 import { link } from "./link";
 import { store, StoreConfigurationsRegistry } from "./store";
@@ -72,9 +72,9 @@ describe("store", () => {
 
 			subject.subscribe(subscriber);
 
-			const update = event();
-			const first = event();
-			const second = event();
+			const update = channel();
+			const first = channel();
+			const second = channel();
 
 			link({
 				clock: { subject: update },

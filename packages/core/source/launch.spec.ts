@@ -1,8 +1,8 @@
+import { channel } from "./channel";
 import { context, RuntimeContext } from "./context";
-import { effect } from "./effect";
-import { event } from "./event";
 import { launch } from "./launch";
 import { link } from "./link";
+import { routine } from "./routine";
 
 const setup = () => {
 	let resolve: () => void = () => {
@@ -18,35 +18,35 @@ const setup = () => {
 		reject = rej;
 	});
 
-	const fx = effect(() => promise);
+	const r = routine(() => promise);
 
 	return {
-		fx,
+		r,
 		resolve,
 		reject,
 	};
 };
 
 describe("launch", () => {
-	it("safely invokes an effect", async () => {
+	it("safely invokes a routine", async () => {
 		expect.hasAssertions();
 
 		const handler = jest.fn();
-		const fx = effect(handler);
+		const r = routine(handler);
 		const error = new Error();
 		handler.mockRejectedValue(error);
 
-		await expect(launch(fx)).resolves.toStrictEqual({
+		await expect(launch(r)).resolves.toStrictEqual({
 			inFlight: 0,
 			error: expect.any(Function),
 			errors: [error],
 		});
 	});
 
-	it("waits for all effects are settled", async () => {
+	it("waits for all routines are settled", async () => {
 		expect.hasAssertions();
 
-		const { fx: first, resolve: resolveFirst } = setup();
+		const { r: first, resolve: resolveFirst } = setup();
 
 		const firstInvokeListener = jest.fn();
 		first.listen(firstInvokeListener);
@@ -54,7 +54,7 @@ describe("launch", () => {
 		const firstSettledListener = jest.fn();
 		first.settled.listen(firstSettledListener);
 
-		const { fx: second, resolve: resolveSecond } = setup();
+		const { r: second, resolve: resolveSecond } = setup();
 
 		const secondInvokeListener = jest.fn();
 		second.listen(secondInvokeListener);
@@ -63,7 +63,7 @@ describe("launch", () => {
 		second.settled.listen(secondSettledListener);
 
 		const payload = 0;
-		const tirgger = event<number>();
+		const tirgger = channel<number>();
 
 		link({
 			clock: { subject: tirgger },
@@ -92,20 +92,20 @@ describe("launch", () => {
 		expect(secondSettledListener).toHaveBeenCalledTimes(1);
 	});
 
-	it("continues running even if an effect is rejected", async () => {
+	it("continues running even if a routine is rejected", async () => {
 		expect.hasAssertions();
 
-		const { fx: rejecting, reject } = setup();
+		const { r: rejecting, reject } = setup();
 
 		const rejectingSettledListener = jest.fn();
 		rejecting.settled.listen(rejectingSettledListener);
 
-		const { fx: resolving, resolve } = setup();
+		const { r: resolving, resolve } = setup();
 
 		const resolvingSettledListener = jest.fn();
 		resolving.settled.listen(resolvingSettledListener);
 
-		const tirgger = event();
+		const tirgger = channel();
 
 		link({
 			clock: { subject: tirgger },
@@ -133,8 +133,8 @@ describe("launch", () => {
 	});
 
 	it("restores runtime context", async () => {
-		const first = effect(() => Promise.resolve());
-		const second = effect(() => Promise.resolve());
+		const first = routine(() => Promise.resolve());
+		const second = routine(() => Promise.resolve());
 
 		await Promise.all([launch(first), launch(second)]);
 
@@ -145,86 +145,90 @@ describe("launch", () => {
 		/**
 		 * Resolution sequence:
 		 *
-		 *           CTX-2 — FX-1 — RES
+		 *           CTX-2 — R-1 — RES
 		 *                           ↓
-		 * CTX-1 — FX-1 — REJ        ↓
+		 * CTX-1 — R-1 — REJ        ↓
 		 *  ↓                        ↓
-		 * CTX-1 — FX-2 — RES        ↓
+		 * CTX-1 — R-2 — RES        ↓
 		 *  ↓                        ↓
-		 *  ↓        CTX-2 — FX-2 — RES
+		 *  ↓        CTX-2 — R-2 — RES
 		 *  ↓                        ↓
-		 * CTX-1 — FX-3 — REJ        ↓
+		 * CTX-1 — R-3 — REJ        ↓
 		 *                           ↓
-		 *           CTX-2 — FX-3 — REJ
+		 *           CTX-2 — R-3 — REJ
 		 */
 
-		const firstContextFirstEffectError = new Error();
-		const { fx: firstContextFirstEffect, reject: rejectFirstContextFirstEffect } =
-			setup();
-
+		const firstContextFirstRoutineError = new Error();
 		const {
-			fx: firstContextSecondEffect,
-			resolve: resolveFirstContextSecondEffect,
-		} = setup();
-
-		const firstContextThirdEffectError = new Error();
-		const { fx: firstContextThirdEffect, reject: rejectFirstContextThirdEffect } =
-			setup();
-
-		const {
-			fx: secondContextFirstEffect,
-			resolve: resolveSecondContextFirstEffect,
+			r: firstContextFirstRoutine,
+			reject: rejectFirstContextFirstRoutine,
 		} = setup();
 
 		const {
-			fx: secondContextSecondEffect,
-			resolve: resolveSecondContextSecondEffect,
+			r: firstContextSecondRoutine,
+			resolve: resolveFirstContextSecondRoutine,
 		} = setup();
 
-		const secondContextThirdEffectError = new Error();
+		const firstContextThirdRoutineError = new Error();
 		const {
-			fx: secondContextThirdEffect,
-			reject: rejectSecondContextThirdEffect,
+			r: firstContextThirdRoutine,
+			reject: rejectFirstContextThirdRoutine,
+		} = setup();
+
+		const {
+			r: secondContextFirstRoutine,
+			resolve: resolveSecondContextFirstRoutine,
+		} = setup();
+
+		const {
+			r: secondContextSecondRoutine,
+			resolve: resolveSecondContextSecondRoutine,
+		} = setup();
+
+		const secondContextThirdRoutineError = new Error();
+		const {
+			r: secondContextThirdRoutine,
+			reject: rejectSecondContextThirdRoutine,
 		} = setup();
 
 		link({
-			clock: { subject: firstContextFirstEffect.settled },
-			target: firstContextSecondEffect,
+			clock: { subject: firstContextFirstRoutine.settled },
+			target: firstContextSecondRoutine,
 		});
 		link({
-			clock: { subject: firstContextSecondEffect.settled },
-			target: firstContextThirdEffect,
+			clock: { subject: firstContextSecondRoutine.settled },
+			target: firstContextThirdRoutine,
 		});
 
 		link({
-			clock: { subject: secondContextFirstEffect.settled },
-			target: secondContextSecondEffect,
+			clock: { subject: secondContextFirstRoutine.settled },
+			target: secondContextSecondRoutine,
 		});
 		link({
-			clock: { subject: secondContextSecondEffect.settled },
-			target: secondContextThirdEffect,
+			clock: { subject: secondContextSecondRoutine.settled },
+			target: secondContextThirdRoutine,
 		});
 
-		const firstLaunching = launch(firstContextFirstEffect);
-		const secondLaunching = launch(secondContextFirstEffect);
+		const firstLaunching = launch(firstContextFirstRoutine);
+		const secondLaunching = launch(secondContextFirstRoutine);
 
-		resolveSecondContextFirstEffect();
-		rejectFirstContextFirstEffect(firstContextFirstEffectError);
-		resolveFirstContextSecondEffect();
-		resolveSecondContextSecondEffect();
-		rejectFirstContextThirdEffect(firstContextThirdEffectError);
-		rejectSecondContextThirdEffect(secondContextThirdEffectError);
+		resolveSecondContextFirstRoutine();
+		rejectFirstContextFirstRoutine(firstContextFirstRoutineError);
+		resolveFirstContextSecondRoutine();
+		resolveSecondContextSecondRoutine();
+		rejectFirstContextThirdRoutine(firstContextThirdRoutineError);
+		rejectSecondContextThirdRoutine(secondContextThirdRoutineError);
 
 		await expect(firstLaunching).resolves.toStrictEqual({
 			inFlight: 0,
 			error: expect.any(Function),
-			errors: [firstContextFirstEffectError, firstContextThirdEffectError],
+			errors: [firstContextFirstRoutineError, firstContextThirdRoutineError],
 		});
 
 		await expect(secondLaunching).resolves.toStrictEqual({
 			inFlight: 0,
 			error: expect.any(Function),
-			errors: [secondContextThirdEffectError],
+			errors: [secondContextThirdRoutineError],
 		});
 	});
 });

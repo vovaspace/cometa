@@ -1,22 +1,25 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useSyncExternalStore } from "use-sync-external-store/shim/index.js";
 
-const setup = () => ({ initial: true });
+import { context } from "@cometa/core/internal";
+
 const subscribe = () => () => {};
 const snapshot = () => null;
-const empty: [] = [];
 
 export function useHydration(callback: () => void): void {
-	const cycle = useState(setup)[0];
+	const effect = useState(() => {
+		let initial = true;
 
-	const effect = useCallback(() => {
-		if (cycle.initial) {
-			cycle.initial = false;
-			callback();
-		}
+		return () => {
+			if (initial) {
+				initial = false;
+				context.current;
+				callback();
+			}
 
-		return null;
-	}, empty);
+			return null;
+		};
+	})[0];
 
 	useSyncExternalStore(subscribe, snapshot, effect);
 }

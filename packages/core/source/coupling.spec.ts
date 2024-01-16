@@ -1,34 +1,34 @@
+import { channel } from "./channel";
 import { uncouple } from "./coupling";
-import { event } from "./event";
-import { factory } from "./factory";
 import { link } from "./link";
+import { model } from "./model";
 
 describe("coupling", () => {
 	describe("uncoupling", () => {
 		it("unlinks all instance links", () => {
-			const externalEvent = event();
+			const externalChannel = channel();
 			const listener = jest.fn();
-			externalEvent.listen(listener);
+			externalChannel.listen(listener);
 
-			const create = factory(() => {
-				const internalEvent = event();
+			const create = model(() => {
+				const internalChannel = channel();
 
 				link({
-					clock: { subject: internalEvent },
-					target: externalEvent,
+					clock: { subject: internalChannel },
+					target: externalChannel,
 				});
 
-				return { internalEvent };
+				return { internalChannel };
 			});
 
 			const instance = create();
 
-			instance.internalEvent();
+			instance.internalChannel();
 
 			expect(listener).toHaveBeenCalledTimes(1);
 
 			uncouple(instance);
-			instance.internalEvent();
+			instance.internalChannel();
 
 			expect(listener).toHaveBeenCalledTimes(1);
 		});

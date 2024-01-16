@@ -1,59 +1,38 @@
-import {
-	createDispatcher,
-	type DispatcherController,
-	DispatchersRegistry,
-} from "./dispatcher";
 import { lifecycle } from "./lifecycle";
 import { link, unlink } from "./link";
-import { type Protocol, type WithProtocol } from "./protocol";
 import { notify } from "./scheduler";
+import { type Thread, type ThreadProtocol } from "./thread";
 
-export interface ChannelProtocol extends Protocol {
+export interface ChannelProtocol extends ThreadProtocol {
 	channel: true;
 }
 
-export interface Channel<Payload> extends WithProtocol {
+export interface Channel<Payload> extends Thread<Payload> {
+	(payload: Payload): void;
 	protocol: ChannelProtocol;
-	listen: (listener: (payload: Payload) => void) => () => void;
 }
 
-export type ChannelPayload<C> = C extends Channel<infer T> ? T : never;
-
-export interface ChannelController<Payload> extends DispatcherController {
-	emit: (payload: Payload) => void;
-}
+export type ChannelPayload<E> = E extends Channel<infer T> ? T : never;
 
 const protocol: ChannelProtocol = {
 	cometa: true,
+	thread: true,
 	channel: true,
 } as const;
 
-const noop = (): void => {};
+function createChannel<Payload = void>(): Channel<Payload> {
+	const channel: Channel<Payload> = (payload) => notify(channel, payload);
 
-function createChannel<Payload = void>(
-	setup: (controller: ChannelController<Payload>) => void,
-): Channel<Payload> {
-	const channel: Channel<Payload> = {
-		protocol,
-		listen(listener) {
-			const l = link({
-				clock: { subject: channel },
-				target: listener,
-			});
+	channel.listen = (listener) => {
+		const l = link({
+			clock: { subject: channel },
+			target: listener,
+		});
 
-			return () => unlink(l);
-		},
+		return () => unlink(l);
 	};
 
-	const dispatcher = createDispatcher<ChannelController<Payload>, void>(
-		(controller) =>
-			((controller as ChannelController<Payload>).emit = (payload: Payload) =>
-				notify(channel, payload)),
-		setup,
-		noop,
-	);
-
-	DispatchersRegistry.set(channel, dispatcher);
+	channel.protocol = protocol;
 
 	return lifecycle.current.subject(channel);
 }

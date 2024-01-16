@@ -1,4 +1,4 @@
-import { type Event, type EventProtocol } from "./event";
+import { type Channel, type ChannelProtocol } from "./channel";
 import { lifecycle } from "./lifecycle";
 import { link, unlink } from "./link";
 import { notify } from "./scheduler";
@@ -6,11 +6,11 @@ import { type Serialization, type Serialized } from "./serialization";
 import { type Stream, type StreamProtocol } from "./stream";
 import { createSubscriber } from "./subscriber";
 
-export interface StoreProtocol extends EventProtocol, StreamProtocol {
+export interface StoreProtocol extends ChannelProtocol, StreamProtocol {
 	store: true;
 }
 
-export interface Store<State> extends Event<State>, Stream<State> {
+export interface Store<State> extends Channel<State>, Stream<State> {
 	protocol: StoreProtocol;
 	initial: State;
 	set: (next: State) => void;
@@ -30,8 +30,8 @@ export const StoreConfigurationsRegistry = new WeakMap<
 
 const protocol: StoreProtocol = {
 	cometa: true,
+	thread: true,
 	channel: true,
-	event: true,
 	stream: true,
 	store: true,
 } as const;

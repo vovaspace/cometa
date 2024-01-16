@@ -1,7 +1,9 @@
-import { CoreToken } from "../../core";
+import { FC } from "react";
+
 // import { MovieToken } from "../../modules/Movie";
 import { useSource, useToken } from "@cometa/react";
-import { FC } from "react";
+
+import { CoreToken } from "../../core";
 
 export const Meta: FC = () => {
 	const core = useToken(CoreToken);

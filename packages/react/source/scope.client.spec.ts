@@ -1,25 +1,26 @@
+import { model, Store, store } from "@cometa/core";
+
 import { createScope } from "./scope.client";
-import { createStore, defineModel, Store } from "@cometa/core";
 
 describe("scope", () => {
 	describe("client", () => {
 		it("hydrates bound model instances", () => {
-			const createInternal = defineModel(() => ({
-				store: createStore("initial"),
+			const createInternal = model(() => ({
+				store: store("initial"),
 			}));
 
 			let internalInstance: { store: Store<string> } | null = null;
-			const createPublic = defineModel(() => ({
+			const createPublic = model(() => ({
 				internal: (internalInstance = createInternal()),
-				store: createStore("initial"),
+				store: store("initial"),
 			}));
 
-			const createExtra = defineModel(() => ({
-				store: createStore("initial"),
+			const createExtra = model(() => ({
+				store: store("initial"),
 			}));
 
-			const createReady = defineModel(() => ({
-				store: createStore("initial"),
+			const createReady = model(() => ({
+				store: store("initial"),
 			}));
 
 			const publicInstance = createPublic();
@@ -28,15 +29,17 @@ describe("scope", () => {
 
 			const scope = createScope();
 
-			scope.hydrate({
-				public: ["public", "internal"],
-				extra: ["extra"],
-			});
+			scope.hydrate([
+				{
+					public: ["public", "internal"],
+					extra: ["extra"],
+				},
+				{},
+			]);
 
-			scope
-				.bind("public", publicInstance)
-				.bind("extra", extraInstance)
-				.bind("ready", readyInstance);
+			scope.bind("public", publicInstance);
+			scope.bind("extra", extraInstance);
+			scope.bind("ready", readyInstance);
 
 			expect(internalInstance!.store.read()).toBe("internal");
 			expect(publicInstance.store.read()).toBe("public");
