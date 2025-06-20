@@ -1,15 +1,25 @@
+import { FunctionComponent, PropsWithChildren } from "react";
+
 import { isModel } from "@cometa/core/internal";
 
 import { BindingScope, useContainer } from "./container";
 import { useHydration } from "./hydration";
 import { useScope } from "./scope";
-import { createToken } from "./token";
+import { createToken, Token, TokenKey } from "./token";
 
-export function relay(configuration) {
+type RelayProvider<T> = FunctionComponent<PropsWithChildren<{ value: T }>>;
+
+interface RelayConfiguration {
+	key: TokenKey;
+}
+
+export function relay<T>(
+	configuration: RelayConfiguration,
+): [Token: Token<T>, Provider: RelayProvider<T>] {
 	const key = configuration.key;
-	const Token = createToken(key);
+	const Token = createToken<T>(key);
 
-	const RelayerProvider = (props) => {
+	const RelayerProvider: RelayProvider<T> = (props) => {
 		const value = props.value;
 
 		const container = useContainer();
@@ -21,7 +31,7 @@ export function relay(configuration) {
 		const scope = useScope();
 		if (scope) useHydration(() => isModel(value) && scope.bind(key, value));
 
-		return props.children;
+		return props.children as JSX.Element;
 	};
 
 	return [Token, RelayerProvider];

@@ -11,7 +11,7 @@
 		"lib:runtime": "run-p lib:cjs lib:esm",
 		"lib:cjs": "babel source --config-file ../babel.cjs.config.json --extensions .ts --out-file-extension .cjs --out-dir lib",
 		"lib:esm": "babel source --config-file ../babel.esm.config.json --extensions .ts --out-dir lib",
-		"clean": "rm -rf lib",
+		"clean": "rm -r lib",
 		"prepack": "run-s test clean lib"
 	},
 	"main": "./lib/index.cjs",

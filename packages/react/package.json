@@ -4,14 +4,13 @@
 	"description": "React bindings layer for Cometa, the data-flow manager.",
 	"type": "module",
 	"scripts": {
-		"test": "jest -c ../jest.config.js",
-		"test:coverage": "npm test -- --coverage",
+		"test": "node --import tsx/esm --test **/*.spec.*",
 		"lib": "run-s lib:declarations lib:runtime",
 		"lib:declarations": "tsc",
 		"lib:runtime": "run-p lib:cjs lib:esm",
 		"lib:cjs": "babel source --config-file ../babel.cjs.config.json --extensions .ts --out-file-extension .cjs --out-dir lib",
 		"lib:esm": "babel source --config-file ../babel.esm.config.json --extensions .ts --out-dir lib",
-		"clean": "rm -rf lib",
+		"clean": "rm -r lib",
 		"prepack": "run-s test clean lib"
 	},
 	"main": "./lib/index.cjs",

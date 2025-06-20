@@ -1,30 +1,44 @@
-import assert from "node:assert/strict";
+import { suite } from "uvu";
+import assert from "uvu/assert";
 
 import { BindingScope, createContainer } from "./container";
 import { ResourceStatus } from "./resource";
 import { createToken, Token } from "./token";
 
-describe("container", () => {
-	describe("singleton scope", () => {
-		it("resolves", () => {
-			const container = createContainer();
+const ContainerSingleton = suite("container/singleton");
 
-			const key = "singleton";
-			const singleton = {};
+ContainerSingleton("resolves", () => {
+	const container = createContainer();
 
-			container.bind(key, {
-				scope: BindingScope.Singleton,
-				instance: singleton,
-			});
+	const key = "singleton";
+	const singleton = {};
 
-			const resolution = container.resolve(key);
-			const resolved = resolution.resource.resolve();
-
-			assert.equal(resolved.status, ResourceStatus.Resolved);
-			expect(resolved.instance).toBe(singleton);
-		});
+	container.bind(key, {
+		scope: BindingScope.Singleton,
+		instance: singleton,
 	});
 
+	const resolution = container.resolve(key);
+	const resolved = resolution.resource.resolve();
+
+	assert.ok(resolved.status === ResourceStatus.Resolved);
+	assert.is(resolved.instance, singleton);
+});
+
+const ContainerResolution = suite<{
+	Singleton: Token<unknown>;
+	SyncPureInstance: Token<unknown>;
+	AsyncPureInstance: Token<unknown>;
+	AsyncSecondPureInstance: Token<unknown>;
+	AsyncThirdPureInstance: Token<unknown>;
+	SyncNonPureInstance: Token<unknown>;
+	AsyncNonPureInstance: Token<unknown>;
+}>("container/resolution");
+
+ContainerSingleton.run();
+ContainerResolution.run();
+
+describe("container", () => {
 	describe("resolution scope", () => {
 		const container = createContainer();
 
@@ -54,36 +68,42 @@ describe("container", () => {
 			scope: BindingScope.Resolution,
 			factory: () => instances.get(SyncPureInstance),
 			cleanup: () => {},
+			dependencies: null,
 			pure: true,
 		});
 		container.bind(AsyncPureInstance.key, {
 			scope: BindingScope.Resolution,
 			factory: () => Promise.resolve(instances.get(AsyncPureInstance)),
 			cleanup: () => {},
+			dependencies: null,
 			pure: true,
 		});
 		container.bind(AsyncSecondPureInstance.key, {
 			scope: BindingScope.Resolution,
 			factory: () => Promise.resolve(instances.get(AsyncSecondPureInstance)),
 			cleanup: () => {},
+			dependencies: null,
 			pure: true,
 		});
 		container.bind(AsyncThirdPureInstance.key, {
 			scope: BindingScope.Resolution,
 			factory: () => Promise.resolve(instances.get(AsyncThirdPureInstance)),
 			cleanup: () => {},
+			dependencies: null,
 			pure: true,
 		});
 		container.bind(SyncNonPureInstance.key, {
 			scope: BindingScope.Resolution,
 			factory: () => instances.get(SyncNonPureInstance),
 			cleanup: () => {},
+			dependencies: null,
 			pure: false,
 		});
 		container.bind(AsyncNonPureInstance.key, {
 			scope: BindingScope.Resolution,
 			factory: () => Promise.resolve(instances.get(AsyncNonPureInstance)),
 			cleanup: () => {},
+			dependencies: null,
 			pure: false,
 		});
 
@@ -248,6 +268,7 @@ describe("container", () => {
 					scope: BindingScope.Resolution,
 					factory: () => c.factory({ empty: true }),
 					cleanup: () => {},
+					dependencies: null,
 					pure: c.pure,
 				});
 
@@ -280,6 +301,7 @@ describe("container", () => {
 				scope: BindingScope.Resolution,
 				factory: () => ({}),
 				cleanup,
+				dependencies: null,
 				pure: true,
 			});
 
